@@ -2,6 +2,14 @@ import React, { useState } from 'react';
 import {
   ChevronRight,
   Monitor,
+  Presentation,
+  MessagesSquare,
+  Boxes,
+  Eye,
+  BrainCircuit,
+  Radio,
+  Workflow,
+  Server,
   Cpu,
   Zap,
   CheckCircle,
@@ -15,6 +23,7 @@ import {
   EarthLockIcon,
   Computer,
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import qm22a from '/qm22a.png';
@@ -69,6 +78,189 @@ interface Partner {
   color: string;
 }
 
+interface CategoryBrand {
+  name: string;
+  logo?: string;
+  /** Matches a `partners[].id` below — brand has a product catalogue on this page. */
+  partnerId?: string;
+  /** Route to an existing solution page, used when there is no product catalogue. */
+  route?: string;
+}
+
+interface Category {
+  id: string;
+  name: string;
+  description: string;
+  icon: React.ComponentType<any>;
+  color: string;
+  brands: CategoryBrand[];
+}
+
+const CATEGORIES: Category[] = [
+  {
+    id: 'display-projection',
+    name: 'Advanced Display & Projection Systems',
+    description:
+      'Professional displays, LED walls, projection and digital signage — from panel-level manufacturing to complete visual installations.',
+    icon: Monitor,
+    color: 'from-indigo-500 to-blue-600',
+    brands: [
+      { name: 'AI-LA', logo: 'ai-la.png', partnerId: 'ai-la' },
+      { name: 'BOE', logo: 'boe1.png', partnerId: 'boe' },
+      { name: 'Lumitrix' },
+    ],
+  },
+  {
+    id: 'professional-av',
+    name: 'Integrated Professional AV Solutions',
+    description:
+      'End-to-end audio-visual systems for meeting rooms, auditoriums and control rooms — signal distribution, room kits and integrated environments.',
+    icon: Presentation,
+    color: 'from-sky-500 to-cyan-600',
+    brands: [
+      { name: 'V View', logo: 'vview.png', partnerId: 'vview' },
+      {
+        name: 'Ashton Bentley',
+        logo: 'ashton.png',
+        route: '/Ashton-bentley-solutions',
+      },
+      { name: 'ZeeVee', logo: 'zeevee1.png', route: '/Zeevee-solutions' },
+    ],
+  },
+  {
+    id: 'unified-communications',
+    name: 'Unified Communications & Collaboration Platforms',
+    description:
+      'Meeting and collaboration technology — video conferencing, streaming, audio capture and the platforms that connect distributed teams.',
+    icon: MessagesSquare,
+    color: 'from-violet-500 to-purple-600',
+    brands: [
+      { name: 'Mago', logo: 'mago1.png', route: '/mago-solutions' },
+      { name: 'Pexip' },
+      { name: 'Neat' },
+      { name: 'Insta360 (Video)' },
+      { name: 'Nearity', logo: 'nearity1.png', route: '/nearity-solutions' },
+      {
+        name: 'Nearstream',
+        logo: 'nearstream1.png',
+        route: '/nearstream-solutions',
+      },
+    ],
+  },
+  {
+    id: 'immersive-xr',
+    name: 'Immersive Experience Technologies (XR/VR/MR)',
+    description:
+      'Headsets, wearables and immersive platforms for training, remote assistance and enterprise extended-reality deployments.',
+    icon: GlassesIcon,
+    color: 'from-fuchsia-500 to-pink-600',
+    brands: [
+      { name: 'HTC VIVE', logo: 'vive1.png', partnerId: 'htc-vive' },
+      { name: 'RealWear' },
+    ],
+  },
+  {
+    id: 'digital-twin',
+    name: 'Digital Twin & Simulation Solutions',
+    description:
+      'Photorealistic 3D reconstruction, spatial simulation and immersive visualisation environments for planning and operations.',
+    icon: Boxes,
+    color: 'from-teal-500 to-emerald-600',
+    brands: [
+      { name: 'Viverse', logo: 'viverse1.png', route: '/Viverse-solutions' },
+      { name: 'Vizzio', logo: 'vizzio1.png', partnerId: 'vizzio' },
+      { name: 'Igloo Vision' },
+    ],
+  },
+  {
+    id: 'visual-ai',
+    name: 'Visual AI & Computer Vision Solutions',
+    description:
+      'Camera-based intelligence — inspection, monitoring, analytics and remote expert guidance powered by computer vision.',
+    icon: Eye,
+    color: 'from-emerald-500 to-green-600',
+    brands: [
+      { name: 'Polytron', logo: 'polytron copy.png', partnerId: 'Polytron' },
+      { name: 'Camsense', logo: 'camsense.png' },
+      { name: 'Telepresenz', logo: 'tele.png.png', partnerId: 'tele-presenz' },
+      { name: 'Robro', logo: 'roboro.png', route: '/robro-systems-solutions' },
+      { name: 'Insta360 (Cameras)' },
+    ],
+  },
+  {
+    id: 'enterprise-ai',
+    name: 'Enterprise Artificial Intelligence Solutions',
+    description:
+      'Applied AI platforms for the enterprise — knowledge, language, diagnostics and decision support built on production-grade models.',
+    icon: BrainCircuit,
+    color: 'from-amber-500 to-orange-600',
+    brands: [
+      { name: 'Napster', logo: 'napster1.png', route: '/napster-solutions' },
+      { name: 'XRAI', logo: 'xrai1.png', route: '/xrai-solutions' },
+      { name: 'DeepQ', logo: 'deepqai.png', route: '/deepq-solutions' },
+    ],
+  },
+  {
+    id: 'smart-spaces-iot',
+    name: 'Smart Spaces & IoT Ecosystems',
+    description:
+      'Wireless sensing, condition monitoring and connected-building infrastructure that makes physical spaces measurable.',
+    icon: Radio,
+    color: 'from-rose-500 to-red-600',
+    brands: [
+      {
+        name: 'Disrupt-X',
+        logo: 'disruptx1.png',
+        route: '/disruptive-technologies-solutions',
+      },
+      {
+        name: 'Nano Precise',
+        logo: 'nano.png',
+        route: '/nano-precise-solutions',
+      },
+      { name: 'Milesight' },
+    ],
+  },
+  {
+    id: 'software-operations',
+    name: 'Software Operations & Lifecycle Management',
+    description:
+      'Platforms for managing assets, properties and creative operations across their full lifecycle.',
+    icon: Workflow,
+    color: 'from-orange-500 to-amber-600',
+    brands: [
+      {
+        name: 'Property Automate',
+        logo: 'automate1.png',
+        partnerId: 'property-automate',
+      },
+      { name: 'Cactus', logo: 'cactus1.png' },
+    ],
+  },
+  {
+    id: 'networking',
+    name: 'Advanced Networking Solutions',
+    description:
+      'Wired and wireless network infrastructure, guest access and captive-portal platforms for demanding environments.',
+    icon: Network,
+    color: 'from-cyan-500 to-blue-600',
+    brands: [
+      { name: 'Weblib', logo: 'weblib1.png', route: '/weblib-solutions' },
+      { name: 'G-Reigns', logo: 'g reigns1.png', partnerId: 'g-reigns' },
+      { name: 'Netgear' },
+    ],
+  },
+  {
+    id: 'it-infrastructure',
+    name: 'Enterprise IT Infrastructure',
+    description:
+      'Servers, storage and compute platforms underpinning enterprise workloads, virtualisation and AI training.',
+    icon: Server,
+    color: 'from-slate-500 to-slate-700',
+    brands: [{ name: 'Supermicro' }],
+  },
+];
+
 /*
  * A handful of logo/image filenames referenced in the data below don't exist in
  * /public (they were renamed at some point). Map them to the real files, and
@@ -108,6 +300,8 @@ const SafeImage: React.FC<{
 };
 
 const ProductsPage: React.FC = () => {
+  const navigate = useNavigate();
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedPartner, setSelectedPartner] = useState<string>('');
   const [selectedProduct, setSelectedProduct] = useState<string>('');
 
@@ -5533,8 +5727,20 @@ const ProductsPage: React.FC = () => {
     }
   };
 
-  const handlePartnerSelect = (partnerId: string) => {
-    setSelectedPartner(partnerId);
+  const handleCategorySelect = (categoryId: string) => {
+    setSelectedCategory(categoryId);
+    setSelectedPartner('');
+    setSelectedProduct('');
+    scrollToContent();
+  };
+
+  const handleBrandSelect = (brand: CategoryBrand) => {
+    if (brand.route) {
+      navigate(brand.route);
+      return;
+    }
+    if (!brand.partnerId) return;
+    setSelectedPartner(brand.partnerId);
     setSelectedProduct('');
     scrollToContent();
   };
@@ -5544,16 +5750,20 @@ const ProductsPage: React.FC = () => {
     scrollToContent();
   };
 
+  const selectedCategoryData = CATEGORIES.find(
+    (c) => c.id === selectedCategory
+  );
   const selectedPartnerData = partners.find((p) => p.id === selectedPartner);
   const selectedProductData = selectedPartnerData?.products.find(
     (p) => p.id === selectedProduct
   );
   const availableProducts = selectedPartnerData?.products || [];
 
-  const categoriesFor = (partner?: Partner) =>
-    partner
-      ? Array.from(new Set(partner.products.map((p) => p.category.trim())))
-      : [];
+  const selectedBrandName =
+    selectedCategoryData?.brands.find((b) => b.partnerId === selectedPartner)
+      ?.name ||
+    selectedPartnerData?.name.trim() ||
+    '';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100">
@@ -5572,10 +5782,13 @@ const ProductsPage: React.FC = () => {
             Our Products
           </h1>
           <p className="text-white/90 text-base sm:text-lg leading-relaxed">
-            We represent leading global technology brands, including:
+            We operate across key technology categories, including:
             <br />
             <span className="font-semibold">
-              {partners.map((p) => p.name.trim()).join(' • ')}
+              Advanced Display &amp; Projection Systems • Integrated
+              Professional AV Solutions • Unified Communications &amp;
+              Collaboration Platforms • Immersive Experience Technologies •
+              Enterprise Artificial Intelligence Solutions
             </span>
           </p>
         </div>
@@ -5586,17 +5799,36 @@ const ProductsPage: React.FC = () => {
         <nav className="flex items-center flex-wrap gap-2 text-sm mb-6">
           <button
             onClick={() => {
+              setSelectedCategory('');
               setSelectedPartner('');
               setSelectedProduct('');
             }}
             className={
-              selectedPartner
+              selectedCategory
                 ? 'text-slate-500 hover:text-blue-600 transition-colors'
                 : 'text-slate-900 font-medium'
             }
           >
             Products
           </button>
+          {selectedCategoryData && (
+            <>
+              <ChevronRight className="w-4 h-4 text-slate-400" />
+              <button
+                onClick={() => {
+                  setSelectedPartner('');
+                  setSelectedProduct('');
+                }}
+                className={
+                  selectedPartner
+                    ? 'text-slate-500 hover:text-blue-600 transition-colors text-left'
+                    : 'text-slate-900 font-medium text-left'
+                }
+              >
+                {selectedCategoryData.name}
+              </button>
+            </>
+          )}
           {selectedPartnerData && (
             <>
               <ChevronRight className="w-4 h-4 text-slate-400" />
@@ -5608,7 +5840,7 @@ const ProductsPage: React.FC = () => {
                     : 'text-slate-900 font-medium'
                 }
               >
-                {selectedPartnerData.name.trim()}
+                {selectedBrandName}
               </button>
             </>
           )}
@@ -5626,27 +5858,29 @@ const ProductsPage: React.FC = () => {
           {/* Sidebar */}
           <div className="lg:w-80 flex-shrink-0">
             <div className="bg-white rounded-xl shadow-lg p-6 sticky top-24">
-              <h3 className="text-xl font-bold text-slate-900 mb-4">Brands</h3>
+              <h3 className="text-xl font-bold text-slate-900 mb-4">
+                Categories
+              </h3>
               <div className="space-y-1">
-                {partners.map((partner) => {
-                  const isActive = partner.id === selectedPartner;
+                {CATEGORIES.map((category) => {
+                  const isActive = category.id === selectedCategory;
                   return (
                     <button
-                      key={partner.id}
-                      onClick={() => handlePartnerSelect(partner.id)}
-                      className={`flex items-center w-full text-left px-4 py-3 rounded-lg transition-colors ${
+                      key={category.id}
+                      onClick={() => handleCategorySelect(category.id)}
+                      className={`flex items-start w-full text-left px-4 py-3 rounded-lg transition-colors ${
                         isActive
                           ? 'bg-blue-50 text-blue-700 font-medium'
                           : 'text-slate-700 hover:bg-slate-100'
                       }`}
                     >
                       <ChevronRight
-                        className={`w-4 h-4 mr-3 flex-shrink-0 ${
+                        className={`w-4 h-4 mr-3 mt-0.5 flex-shrink-0 ${
                           isActive ? 'text-blue-600' : 'text-slate-400'
                         }`}
                       />
                       <span className="text-sm leading-snug">
-                        {partner.name.trim()}
+                        {category.name}
                       </span>
                     </button>
                   );
@@ -5657,43 +5891,30 @@ const ProductsPage: React.FC = () => {
 
           {/* Main content */}
           <div className="flex-1">
-            {/* Brand grid */}
-            {!selectedPartner && (
+            {/* 1. Category grid */}
+            {!selectedCategory && (
               <div className="grid sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                {partners.map((partner) => (
+                {CATEGORIES.map((category) => (
                   <button
-                    key={partner.id}
-                    onClick={() => handlePartnerSelect(partner.id)}
+                    key={category.id}
+                    onClick={() => handleCategorySelect(category.id)}
                     className="rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 text-left group relative"
                   >
                     <div
-                      className={`h-56 overflow-hidden relative bg-gradient-to-br ${partner.color}`}
+                      className={`h-56 overflow-hidden relative bg-gradient-to-br ${category.color}`}
                     >
                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                      <div className="absolute inset-x-0 top-0 bottom-16 flex items-center justify-center p-8">
-                        <div className="bg-white rounded-xl px-6 py-5 shadow-lg max-w-[80%] group-hover:scale-105 transition-transform duration-500">
-                          <SafeImage
-                            src={partner.logo}
-                            alt={`${partner.name.trim()} logo`}
-                            className="h-12 w-auto max-w-full object-contain mx-auto"
-                            fallback={
-                              <span className="block text-slate-900 font-bold text-lg text-center whitespace-nowrap">
-                                {partner.name.trim()}
-                              </span>
-                            }
-                          />
-                        </div>
+                      <div className="absolute inset-x-0 top-0 h-24 flex items-center justify-center">
+                        <category.icon className="w-12 h-12 text-white/90 drop-shadow-lg group-hover:scale-110 transition-transform duration-500" />
                       </div>
                       <div className="absolute bottom-0 left-0 right-0 p-4 flex items-end justify-between gap-3">
                         <div className="min-w-0">
-                          <h3 className="text-lg sm:text-xl font-bold text-white drop-shadow leading-tight">
-                            {partner.name.trim()}
+                          <h3 className="text-base sm:text-lg font-bold text-white drop-shadow leading-tight">
+                            {category.name}
                           </h3>
-                          <p className="text-white/80 text-sm">
-                            {partner.products.length}{' '}
-                            {partner.products.length === 1
-                              ? 'product'
-                              : 'products'}
+                          <p className="text-white/80 text-sm mt-0.5">
+                            {category.brands.length}{' '}
+                            {category.brands.length === 1 ? 'brand' : 'brands'}
                           </p>
                         </div>
                         <ChevronRight className="w-5 h-5 flex-shrink-0 mb-1 text-white/90 group-hover:translate-x-1 transition-transform" />
@@ -5704,7 +5925,110 @@ const ProductsPage: React.FC = () => {
               </div>
             )}
 
-            {/* Brand detail — product list */}
+            {/* 2. Category detail — brands in this category */}
+            {selectedCategoryData && !selectedPartner && (
+              <div>
+                <div
+                  className={`relative rounded-xl overflow-hidden shadow-lg mb-6 bg-gradient-to-br ${selectedCategoryData.color}`}
+                >
+                  <div className="absolute inset-0 bg-black/45" />
+                  <div className="relative p-6 sm:p-8">
+                    <button
+                      onClick={() => setSelectedCategory('')}
+                      className="inline-flex items-center text-white/90 hover:text-white text-sm mb-5 transition-colors"
+                    >
+                      <ArrowLeft className="w-4 h-4 mr-2" />
+                      All Categories
+                    </button>
+                    <div className="flex items-start gap-5">
+                      <div className="hidden sm:flex items-center justify-center bg-white/20 backdrop-blur-sm rounded-xl p-3 flex-shrink-0">
+                        <selectedCategoryData.icon className="w-8 h-8 text-white" />
+                      </div>
+                      <div>
+                        <h2 className="text-2xl sm:text-3xl font-bold text-white drop-shadow mb-2">
+                          {selectedCategoryData.name}
+                        </h2>
+                        <p className="text-white/90 leading-relaxed max-w-3xl">
+                          {selectedCategoryData.description}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {selectedCategoryData.brands.map((brand) => {
+                    const partner = partners.find(
+                      (p) => p.id === brand.partnerId
+                    );
+                    const productCount = partner?.products.length || 0;
+                    const isInteractive = Boolean(brand.route || partner);
+
+                    const label = brand.route
+                      ? 'View solutions'
+                      : productCount > 0
+                      ? `${productCount} ${
+                          productCount === 1 ? 'product' : 'products'
+                        }`
+                      : 'Coming soon';
+
+                    return (
+                      <button
+                        key={`${selectedCategoryData.id}-${brand.name}`}
+                        onClick={() => handleBrandSelect(brand)}
+                        disabled={!isInteractive}
+                        aria-disabled={!isInteractive}
+                        className={`rounded-xl shadow-lg overflow-hidden text-left group relative transition-all duration-300 ${
+                          isInteractive
+                            ? 'hover:shadow-2xl transform hover:-translate-y-2 cursor-pointer'
+                            : 'opacity-60 cursor-default'
+                        }`}
+                      >
+                        <div
+                          className={`h-56 overflow-hidden relative bg-gradient-to-br ${
+                            partner?.color ||
+                            selectedCategoryData.color
+                          } ${isInteractive ? '' : 'grayscale'}`}
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                          <div className="absolute inset-x-0 top-0 bottom-16 flex items-center justify-center p-8">
+                            <div
+                              className={`bg-white rounded-xl px-6 py-5 shadow-lg max-w-[80%] transition-transform duration-500 ${
+                                isInteractive ? 'group-hover:scale-105' : ''
+                              }`}
+                            >
+                              <SafeImage
+                                src={brand.logo}
+                                alt={`${brand.name} logo`}
+                                className="h-12 w-auto max-w-full object-contain mx-auto"
+                                fallback={
+                                  <span className="block text-slate-900 font-bold text-lg text-center whitespace-nowrap">
+                                    {brand.name}
+                                  </span>
+                                }
+                              />
+                            </div>
+                          </div>
+                          <div className="absolute bottom-0 left-0 right-0 p-4 flex items-end justify-between gap-3">
+                            <div className="min-w-0">
+                              <h3 className="text-lg sm:text-xl font-bold text-white drop-shadow leading-tight">
+                                {brand.name}
+                              </h3>
+                              <p className="text-white/80 text-sm">{label}</p>
+                            </div>
+                            {isInteractive && (
+                              <ChevronRight className="w-5 h-5 flex-shrink-0 mb-1 text-white/90 group-hover:translate-x-1 transition-transform" />
+                            )}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* 3. Brand detail — product list */}
             {selectedPartner && !selectedProduct && selectedPartnerData && (
               <div>
                 <div
@@ -5717,34 +6041,42 @@ const ProductsPage: React.FC = () => {
                       className="inline-flex items-center text-white/90 hover:text-white text-sm mb-5 transition-colors"
                     >
                       <ArrowLeft className="w-4 h-4 mr-2" />
-                      All Brands
+                      {selectedCategoryData
+                        ? `Back to ${selectedCategoryData.name}`
+                        : 'All Categories'}
                     </button>
                     <div className="flex items-start gap-5">
                       <div className="hidden sm:flex items-center bg-white rounded-xl px-4 py-3 shadow-md flex-shrink-0">
                         <SafeImage
                           src={selectedPartnerData.logo}
-                          alt={`${selectedPartnerData.name.trim()} logo`}
+                          alt={`${selectedBrandName} logo`}
                           className="h-10 w-auto max-w-[140px] object-contain"
                           fallback={
                             <span className="block text-slate-900 font-bold">
-                              {selectedPartnerData.name.trim()}
+                              {selectedBrandName}
                             </span>
                           }
                         />
                       </div>
                       <div>
                         <h2 className="text-3xl font-bold text-white drop-shadow mb-2">
-                          {selectedPartnerData.name.trim()}
+                          {selectedBrandName}
                         </h2>
                         <p className="text-white/90 leading-relaxed max-w-3xl">
-                          The complete {selectedPartnerData.name.trim()}{' '}
-                          portfolio available through Bright Business Services —{' '}
+                          The complete {selectedBrandName} portfolio available
+                          through Bright Business Services —{' '}
                           {selectedPartnerData.products.length}{' '}
                           {selectedPartnerData.products.length === 1
                             ? 'product line'
                             : 'product lines'}{' '}
                           spanning{' '}
-                          {categoriesFor(selectedPartnerData)
+                          {Array.from(
+                            new Set(
+                              selectedPartnerData.products.map((p) =>
+                                p.category.trim()
+                              )
+                            )
+                          )
                             .slice(0, 4)
                             .join(', ')}
                           . Select a product to view versions, features and full
@@ -5801,7 +6133,7 @@ const ProductsPage: React.FC = () => {
               </div>
             )}
 
-            {/* Product detail */}
+            {/* 4. Product detail */}
             {selectedProduct && selectedProductData && (
               <div>
                 <button
@@ -5809,7 +6141,7 @@ const ProductsPage: React.FC = () => {
                   className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium mb-4 transition-colors"
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back to {selectedPartnerData?.name.trim()} Products
+                  Back to {selectedBrandName} Products
                 </button>
 
                 <div
@@ -5877,7 +6209,6 @@ const ProductsPage: React.FC = () => {
                 {/* Comparison table for multi-version display brands */}
                 {(selectedPartner === 'boe' ||
                   selectedPartner === 'ai-la' ||
-                  selectedPartner === 'Nuera Commuincations' ||
                   selectedPartner === 'Polytron') &&
                 selectedProductData.versions.length > 1 ? (
                   <ComparisonTable

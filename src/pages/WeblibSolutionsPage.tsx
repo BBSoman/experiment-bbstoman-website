@@ -1,0 +1,161 @@
+import React from 'react';
+import {
+  Code, // Icon for Web Libraries
+  Database, // Icon for Digital Content Management
+  Link, // Icon for API Integrations
+  Settings, // Icon for Custom Web Solutions
+  Globe, // Icon for Web Development
+  Zap, // Icon for Content Delivery
+  Monitor, // Icon for Digital Innovation
+  CheckCircle,
+  Users,
+} from 'lucide-react'; // Relevant icons for Weblib solutions
+import Header from '../components/Header';
+import Footer from '../components/Footer';
+
+const WeblibSolutionsPage: React.FC = () => {
+  const solutions = [
+    {
+      icon: Code, // Icon for Web Libraries
+      title: 'Web Libraries',
+      description: 'Reusable web components and libraries for efficient development and seamless integration.',
+      color: 'from-blue-500 to-indigo-500',
+    },
+    {
+      icon: Database, // Icon for Digital Content Management
+      title: 'Digital Content Management',
+      description: 'Advanced tools for organizing, storing, and delivering digital content across platforms.',
+      color: 'from-green-500 to-teal-500',
+    },
+    {
+      icon: Link, // Icon for API Integrations
+      title: 'API Integrations',
+      description: 'Seamless API connections to enhance functionality and data flow in web applications.',
+      color: 'from-yellow-500 to-orange-500',
+    },
+    {
+      icon: Settings, // Icon for Custom Web Solutions
+      title: 'Custom Web Solutions',
+      description: 'Tailored web development services designed to meet unique business requirements.',
+      color: 'from-red-500 to-pink-500',
+    },
+    {
+      icon: Globe, // Icon for Web Development
+      title: 'Web Development',
+      description: 'Comprehensive web development expertise for building responsive and scalable websites.',
+      color: 'from-indigo-500 to-purple-600',
+    },
+    {
+      icon: Zap, // Icon for Content Delivery
+      title: 'Content Delivery',
+      description: 'Optimized content delivery networks for fast, reliable access to digital assets.',
+      color: 'from-cyan-500 to-sky-500',
+    },
+    {
+      icon: Monitor, // Icon for Digital Innovation
+      title: 'Digital Innovation',
+      description: 'Cutting-edge solutions driving digital transformation and user engagement.',
+      color: 'from-orange-600 to-amber-600',
+    },
+  ];
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-slate-50">
+      <Header />
+
+      {/* Hero Section */}
+      <section className="py-20">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-100 to-blue-100 rounded-full text-sm font-medium text-blue-700 mb-6">
+            <Monitor className="w-4 h-4 mr-2" />
+            Weblib Solutions
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+            Explore{' '}
+            <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              Weblib Innovations
+            </span>
+          </h1>
+          <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+            Discover innovative web library solutions for seamless digital experiences and content management.
+          </p>
+        </div>
+      </section>
+
+      {/* Solutions Grid */}
+      <section className="pb-20">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Web Library Solutions
+            </h2>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+              Our cutting-edge features enable efficient web development, content management, and digital innovation.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {solutions.map((solution, index) => (
+              <div
+                key={index}
+                className="group bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 hover:border-transparent hover:-translate-y-2"
+              >
+                <div
+                  className={`w-16 h-16 bg-gradient-to-r ${solution.color} rounded-2xl flex items-center justify-center mb-6 transform group-hover:scale-110 transition-transform duration-300`}
+                >
+                  <solution.icon className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-4 group-hover:text-blue-600 transition-colors">
+                  {solution.title}
+                </h3>
+                <p className="text-gray-600 leading-relaxed">
+                  {solution.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-16">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white rounded-2xl p-8 md:p-12 text-center shadow-lg">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Ready to Transform Experiences with Weblib?
+            </h2>
+            <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
+              Get in touch to learn how Weblib can elevate your web development and content management solutions.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <a
+                href="/contact"
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all transform hover:scale-105"
+              >
+                Get Started Today
+              </a>
+              <a
+                href="/contact"
+                className="border-2 border-gray-300 text-gray-700 px-8 py-3 rounded-lg font-semibold hover:border-blue-600 hover:text-blue-600 transition-all"
+              >
+                Request a Demo
+              </a>
+            </div>
+            <div className="mt-8">
+              <a
+                href="/partners"
+                className="inline-block bg-gray-200 text-gray-800 px-6 py-2 rounded-lg font-semibold hover:bg-gray-300 transition-all"
+              >
+                Back to Brands
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <Footer />
+    </div>
+  );
+};
+
+export default WeblibSolutionsPage;

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  ChevronDown,
+  ChevronRight,
   Monitor,
   Cpu,
   Zap,
@@ -58,6 +58,7 @@ interface Product {
   versions: ProductVersion[];
   icon: React.ComponentType<any>;
   color: string;
+  image?: string;
 }
 
 interface Partner {
@@ -68,11 +69,47 @@ interface Partner {
   color: string;
 }
 
+/*
+ * A handful of logo/image filenames referenced in the data below don't exist in
+ * /public (they were renamed at some point). Map them to the real files, and
+ * fall back gracefully for anything still missing.
+ */
+const ASSET_FALLBACKS: Record<string, string> = {
+  'Boe_Technology_Group_logo.svg.png': 'boe1.png',
+  'Vive-logo.png': 'vive1.png',
+  'automate.png': 'automate1.png',
+  'greigns.png': 'g reigns1.png',
+  'byh.jpg': 'byh copy.jpg',
+  'oledkiosk2.png': 'oledkiosk.png',
+  'vizzio1.png': 'vizzio copy.png',
+};
+
+const assetUrl = (file: string) =>
+  `/${encodeURIComponent(ASSET_FALLBACKS[file] || file)}`;
+
+const SafeImage: React.FC<{
+  src?: string;
+  alt: string;
+  className?: string;
+  fallback?: React.ReactNode;
+}> = ({ src, alt, className, fallback = null }) => {
+  const [failed, setFailed] = useState(false);
+
+  if (!src || failed) return <>{fallback}</>;
+
+  return (
+    <img
+      src={assetUrl(src)}
+      alt={alt}
+      className={className}
+      onError={() => setFailed(true)}
+    />
+  );
+};
+
 const ProductsPage: React.FC = () => {
   const [selectedPartner, setSelectedPartner] = useState<string>('');
   const [selectedProduct, setSelectedProduct] = useState<string>('');
-  const [isPartnerDropdownOpen, setIsPartnerDropdownOpen] = useState(false);
-  const [isProductDropdownOpen, setIsProductDropdownOpen] = useState(false);
 
   // BOE BKY-A Product Versions based on the specifications
   const bkyAVersions: ProductVersion[] = [
@@ -5490,16 +5527,21 @@ const ProductsPage: React.FC = () => {
     },
   ];
 
+  const scrollToContent = () => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 320, behavior: 'smooth' });
+    }
+  };
+
   const handlePartnerSelect = (partnerId: string) => {
     setSelectedPartner(partnerId);
     setSelectedProduct('');
-    setIsPartnerDropdownOpen(false);
-    setIsProductDropdownOpen(false);
+    scrollToContent();
   };
 
   const handleProductSelect = (productId: string) => {
     setSelectedProduct(productId);
-    setIsProductDropdownOpen(false);
+    scrollToContent();
   };
 
   const selectedPartnerData = partners.find((p) => p.id === selectedPartner);
@@ -5508,438 +5550,505 @@ const ProductsPage: React.FC = () => {
   );
   const availableProducts = selectedPartnerData?.products || [];
 
+  const categoriesFor = (partner?: Partner) =>
+    partner
+      ? Array.from(new Set(partner.products.map((p) => p.category.trim())))
+      : [];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100">
       <Header />
 
-      {/* Hero Section */}
-      <section className="py-20">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-100 to-purple-100 rounded-full text-sm font-medium text-blue-700 mb-6">
-              <Monitor className="w-4 h-4 mr-2" />
-              Product Catalog
-            </div>
+      {/* Hero Banner */}
+      <div className="relative w-full h-80 mt-16">
+        <img
+          src="/av.jpg"
+          alt="Our Products"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/55 to-black/30" />
+        <div className="relative h-full flex flex-col justify-center px-8 sm:px-16 lg:px-24 max-w-4xl">
+          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4 drop-shadow-lg">
+            Our Products
+          </h1>
+          <p className="text-white/90 text-base sm:text-lg leading-relaxed">
+            We represent leading global technology brands, including:
+            <br />
+            <span className="font-semibold">
+              {partners.map((p) => p.name.trim()).join(' • ')}
+            </span>
+          </p>
+        </div>
+      </div>
 
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              Our{' '}
-              <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Products
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        {/* Breadcrumb */}
+        <nav className="flex items-center flex-wrap gap-2 text-sm mb-6">
+          <button
+            onClick={() => {
+              setSelectedPartner('');
+              setSelectedProduct('');
+            }}
+            className={
+              selectedPartner
+                ? 'text-slate-500 hover:text-blue-600 transition-colors'
+                : 'text-slate-900 font-medium'
+            }
+          >
+            Products
+          </button>
+          {selectedPartnerData && (
+            <>
+              <ChevronRight className="w-4 h-4 text-slate-400" />
+              <button
+                onClick={() => setSelectedProduct('')}
+                className={
+                  selectedProduct
+                    ? 'text-slate-500 hover:text-blue-600 transition-colors'
+                    : 'text-slate-900 font-medium'
+                }
+              >
+                {selectedPartnerData.name.trim()}
+              </button>
+            </>
+          )}
+          {selectedProductData && (
+            <>
+              <ChevronRight className="w-4 h-4 text-slate-400" />
+              <span className="text-slate-900 font-medium">
+                {selectedProductData.name.trim()}
               </span>
-            </h1>
+            </>
+          )}
+        </nav>
 
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Explore our comprehensive range of cutting-edge technology
-              products from industry-leading partners. Find the perfect solution
-              for your business needs.
-            </p>
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Sidebar */}
+          <div className="lg:w-80 flex-shrink-0">
+            <div className="bg-white rounded-xl shadow-lg p-6 sticky top-24">
+              <h3 className="text-xl font-bold text-slate-900 mb-4">Brands</h3>
+              <div className="space-y-1">
+                {partners.map((partner) => {
+                  const isActive = partner.id === selectedPartner;
+                  return (
+                    <button
+                      key={partner.id}
+                      onClick={() => handlePartnerSelect(partner.id)}
+                      className={`flex items-center w-full text-left px-4 py-3 rounded-lg transition-colors ${
+                        isActive
+                          ? 'bg-blue-50 text-blue-700 font-medium'
+                          : 'text-slate-700 hover:bg-slate-100'
+                      }`}
+                    >
+                      <ChevronRight
+                        className={`w-4 h-4 mr-3 flex-shrink-0 ${
+                          isActive ? 'text-blue-600' : 'text-slate-400'
+                        }`}
+                      />
+                      <span className="text-sm leading-snug">
+                        {partner.name.trim()}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
-          {/* Dropdown Controls */}
-          <div className="max-w-4xl mx-auto mb-12">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Partner Dropdown */}
-              <div className="relative">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Select Brand
-                </label>
-                <button
-                  onClick={() => {
-                    setIsPartnerDropdownOpen(!isPartnerDropdownOpen);
-                    setIsProductDropdownOpen(false);
-                  }}
-                  className="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-left flex items-center justify-between hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <span
-                    className={
-                      selectedPartner ? 'text-gray-900' : 'text-gray-500'
-                    }
+          {/* Main content */}
+          <div className="flex-1">
+            {/* Brand grid */}
+            {!selectedPartner && (
+              <div className="grid sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                {partners.map((partner) => (
+                  <button
+                    key={partner.id}
+                    onClick={() => handlePartnerSelect(partner.id)}
+                    className="rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 text-left group relative"
                   >
-                    {selectedPartner
-                      ? selectedPartnerData?.name
-                      : 'Choose a partner...'}
-                  </span>
-                  <ChevronDown
-                    className={`w-5 h-5 text-gray-400 transition-transform ${
-                      isPartnerDropdownOpen ? 'rotate-180' : ''
-                    }`}
-                  />
-                </button>
-
-                {isPartnerDropdownOpen && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                    {partners.map((partner) => (
-                      <button
-                        key={partner.id}
-                        onClick={() => handlePartnerSelect(partner.id)}
-                        className="w-full px-4 py-3 text-left hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg flex items-center"
-                      >
-                        <div
-                          className={`w-8 h-8 ${partner.color} rounded-lg flex items-center justify-center mr-3`}
-                        >
-                          <img
+                    <div
+                      className={`h-56 overflow-hidden relative bg-gradient-to-br ${partner.color}`}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                      <div className="absolute inset-x-0 top-0 bottom-16 flex items-center justify-center p-8">
+                        <div className="bg-white rounded-xl px-6 py-5 shadow-lg max-w-[80%] group-hover:scale-105 transition-transform duration-500">
+                          <SafeImage
                             src={partner.logo}
-                            alt={`${partner.name} logo`}
+                            alt={`${partner.name.trim()} logo`}
+                            className="h-12 w-auto max-w-full object-contain mx-auto"
+                            fallback={
+                              <span className="block text-slate-900 font-bold text-lg text-center whitespace-nowrap">
+                                {partner.name.trim()}
+                              </span>
+                            }
                           />
                         </div>
-
-                        {partner.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Product Dropdown */}
-              <div className="relative">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Select Product
-                </label>
-                <button
-                  onClick={() => {
-                    if (selectedPartner) {
-                      setIsProductDropdownOpen(!isProductDropdownOpen);
-                      setIsPartnerDropdownOpen(false);
-                    }
-                  }}
-                  disabled={!selectedPartner}
-                  className={`w-full border rounded-lg px-4 py-3 text-left flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    selectedPartner
-                      ? 'bg-white border-gray-300 hover:border-blue-500'
-                      : 'bg-gray-100 border-gray-200 cursor-not-allowed'
-                  }`}
-                >
-                  <span
-                    className={
-                      selectedProduct ? 'text-gray-900' : 'text-gray-500'
-                    }
-                  >
-                    {selectedProduct
-                      ? selectedProductData?.name
-                      : selectedPartner
-                      ? 'Choose a product...'
-                      : 'Select a partner first'}
-                  </span>
-                  <ChevronDown
-                    className={`w-5 h-5 text-gray-400 transition-transform ${
-                      isProductDropdownOpen ? 'rotate-180' : ''
-                    }`}
-                  />
-                </button>
-
-                {isProductDropdownOpen && selectedPartner && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                    {availableProducts.map((product) => (
-                      <button
-                        key={product.id}
-                        onClick={() => handleProductSelect(product.id)}
-                        className="w-full px-4 py-3 text-left hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg flex items-center"
-                      >
-                        <div
-                          className={`w-8 h-8 bg-gradient-to-r ${product.color} rounded-lg flex items-center justify-center mr-3`}
-                        >
-                          <product.icon className="w-4 h-4 text-white" />
+                      </div>
+                      <div className="absolute bottom-0 left-0 right-0 p-4 flex items-end justify-between gap-3">
+                        <div className="min-w-0">
+                          <h3 className="text-lg sm:text-xl font-bold text-white drop-shadow leading-tight">
+                            {partner.name.trim()}
+                          </h3>
+                          <p className="text-white/80 text-sm">
+                            {partner.products.length}{' '}
+                            {partner.products.length === 1
+                              ? 'product'
+                              : 'products'}
+                          </p>
                         </div>
-                        <div>
-                          <div className="font-medium">{product.name}</div>
-                          <div className="text-sm text-gray-500">
-                            {product.category}
-                          </div>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Content Display */}
-      <section className="pb-20">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          {!selectedPartner && (
-            <div className="text-center py-16">
-              <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Monitor className="w-12 h-12 text-gray-400" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Select a Brand
-              </h3>
-              <p className="text-gray-600">
-                Choose a Brand from the dropdown above to view their products.
-              </p>
-            </div>
-          )}
-
-          {selectedPartner && !selectedProduct && (
-            <div>
-              <div className="text-center mb-12">
-                <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                  {selectedPartnerData?.name} Products
-                </h2>
-                <p className="text-gray-600">
-                  Select a specific product to view detailed information and
-                  versions.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {availableProducts.map((product) => (
-                  <div
-                    key={product.id}
-                    onClick={() => handleProductSelect(product.id)}
-                    className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1 border border-gray-100 hover:border-blue-200"
-                  >
-                    <div
-                      className={`w-16 h-16 bg-gradient-to-r ${product.color} rounded-2xl flex items-center justify-center mb-6`}
-                    >
-                      <product.icon className="w-8 h-8 text-white" />
+                        <ChevronRight className="w-5 h-5 flex-shrink-0 mb-1 text-white/90 group-hover:translate-x-1 transition-transform" />
+                      </div>
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-3">
-                      {product.name}
-                    </h3>
-                    <p className="text-sm text-blue-600 mb-3">
-                      {product.category}
-                    </p>
-                    <p className="text-gray-600 mb-4">{product.description}</p>
-                    <div className="flex items-center text-blue-600 font-medium">
-                      View Details
-                      <ChevronDown className="w-4 h-4 ml-1 rotate-[-90deg]" />
-                    </div>
-                  </div>
+                  </button>
                 ))}
               </div>
-            </div>
-          )}
-          {selectedProduct && selectedProductData && (
-            <div>
-              <div className="mb-8">
-                <button
-                  onClick={() => setSelectedProduct('')}
-                  className="flex items-center text-blue-600 hover:text-blue-700 mb-4"
-                >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back to {selectedPartnerData?.name} Products
-                </button>
+            )}
 
-                <div className="bg-white rounded-2xl p-8 shadow-lg mb-8">
-                  <div className="flex items-center mb-6">
-                    <div
-                      className={`w-16 h-16 bg-gradient-to-r ${selectedProductData.color} rounded-2xl flex items-center justify-center mr-6`}
+            {/* Brand detail — product list */}
+            {selectedPartner && !selectedProduct && selectedPartnerData && (
+              <div>
+                <div
+                  className={`relative rounded-xl overflow-hidden shadow-lg mb-6 bg-gradient-to-br ${selectedPartnerData.color}`}
+                >
+                  <div className="absolute inset-0 bg-black/45" />
+                  <div className="relative p-6 sm:p-8">
+                    <button
+                      onClick={() => setSelectedPartner('')}
+                      className="inline-flex items-center text-white/90 hover:text-white text-sm mb-5 transition-colors"
                     >
-                      <selectedProductData.icon className="w-8 h-8 text-white" />
-                    </div>
-                    <div>
-                      <h2 className="text-3xl font-bold text-gray-900">
-                        {selectedProductData.name}
-                      </h2>
-                      <p className="text-blue-600 font-medium">
-                        {selectedProductData.category}
-                      </p>
+                      <ArrowLeft className="w-4 h-4 mr-2" />
+                      All Brands
+                    </button>
+                    <div className="flex items-start gap-5">
+                      <div className="hidden sm:flex items-center bg-white rounded-xl px-4 py-3 shadow-md flex-shrink-0">
+                        <SafeImage
+                          src={selectedPartnerData.logo}
+                          alt={`${selectedPartnerData.name.trim()} logo`}
+                          className="h-10 w-auto max-w-[140px] object-contain"
+                          fallback={
+                            <span className="block text-slate-900 font-bold">
+                              {selectedPartnerData.name.trim()}
+                            </span>
+                          }
+                        />
+                      </div>
+                      <div>
+                        <h2 className="text-3xl font-bold text-white drop-shadow mb-2">
+                          {selectedPartnerData.name.trim()}
+                        </h2>
+                        <p className="text-white/90 leading-relaxed max-w-3xl">
+                          The complete {selectedPartnerData.name.trim()}{' '}
+                          portfolio available through Bright Business Services —{' '}
+                          {selectedPartnerData.products.length}{' '}
+                          {selectedPartnerData.products.length === 1
+                            ? 'product line'
+                            : 'product lines'}{' '}
+                          spanning{' '}
+                          {categoriesFor(selectedPartnerData)
+                            .slice(0, 4)
+                            .join(', ')}
+                          . Select a product to view versions, features and full
+                          specifications.
+                        </p>
+                      </div>
                     </div>
                   </div>
+                </div>
 
-                  <p className="text-gray-600 text-lg">
-                    {selectedProductData.description}
-                  </p>
-                  {selectedProductData.image && (
-                    <img
-                      src={selectedProductData.image}
-                      alt={selectedProductData.name}
-                      className="mt-4 rounded-lg"
-                    />
-                  )}
-                  {selectedProductData.partnerDescription && (
-                    <ul className="list-disc list-inside text-gray-600 mt-4">
-                      {selectedProductData.partnerDescription
-                        .split('\n')
-                        .map((point, index) => (
-                          <li key={index}>{point.replace('• ', '')}</li>
-                        ))}
-                    </ul>
-                  )}
+                <div className="space-y-6">
+                  {availableProducts.map((product) => (
+                    <div
+                      key={product.id}
+                      onClick={() => handleProductSelect(product.id)}
+                      className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer group flex flex-col sm:flex-row"
+                    >
+                      <div className="sm:w-72 h-48 sm:h-auto flex-shrink-0 bg-slate-50 relative overflow-hidden">
+                        <SafeImage
+                          src={product.image}
+                          alt={product.name.trim()}
+                          className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-500"
+                          fallback={
+                            <div
+                              className={`w-full h-full min-h-[12rem] flex items-center justify-center bg-gradient-to-br ${product.color}`}
+                            >
+                              <product.icon className="w-12 h-12 text-white" />
+                            </div>
+                          }
+                        />
+                      </div>
+                      <div className="flex-1 p-6">
+                        <div className="flex items-start justify-between gap-4 mb-3">
+                          <h3 className="text-xl font-bold text-slate-900 group-hover:text-blue-700 transition-colors">
+                            {product.name.trim()}
+                          </h3>
+                          <span className="flex-shrink-0 bg-slate-100 text-slate-600 text-xs font-medium px-3 py-1 rounded-full">
+                            {product.category}
+                          </span>
+                        </div>
+                        <p className="text-slate-600 leading-relaxed mb-4">
+                          {product.description}
+                        </p>
+                        <div className="border-t border-slate-100 pt-4">
+                          <span className="inline-flex items-center text-blue-600 font-medium group-hover:text-blue-700">
+                            Learn More
+                            <ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
+            )}
 
-              {/* Show comparison table only for BOE/AI-LA products with multiple versions */}
-              {(selectedPartner === 'boe' ||
-                selectedPartner === 'ai-la' ||
-                selectedPartner === 'Nuera Commuincations' ||
-                selectedPartner === 'Polytron') &&
-              selectedProductData.versions.length > 1 ? (
-                <ComparisonTable
-                  productName={selectedProductData.name}
-                  versions={selectedProductData.versions}
-                />
-              ) : (
-                /* Show product/version details in all other cases */
-                <div className="mb-8">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-6">
-                    {selectedProductData.versions.length > 1
-                      ? 'Available Versions'
-                      : 'Product Details'}
-                  </h3>
+            {/* Product detail */}
+            {selectedProduct && selectedProductData && (
+              <div>
+                <button
+                  onClick={() => setSelectedProduct('')}
+                  className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium mb-4 transition-colors"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to {selectedPartnerData?.name.trim()} Products
+                </button>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
-                    {selectedProductData.versions.map((version, index) => (
-                      <div
-                        key={index}
-                        className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300"
-                      >
-                        <div className="mb-6">
-                          <h4 className="text-xl font-bold text-gray-900 mb-2">
-                            {version.name}
-                          </h4>
+                <div
+                  className={`relative rounded-xl overflow-hidden shadow-lg mb-6 bg-gradient-to-br ${selectedProductData.color}`}
+                >
+                  <div className="absolute inset-0 bg-black/45" />
+                  <div className="relative p-6 sm:p-8">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="bg-white/20 backdrop-blur-sm rounded-xl p-3 flex-shrink-0">
+                        <selectedProductData.icon className="w-8 h-8 text-white" />
+                      </div>
+                      <div>
+                        <h2 className="text-3xl font-bold text-white drop-shadow">
+                          {selectedProductData.name.trim()}
+                        </h2>
+                        <p className="text-white/80 text-sm font-medium">
+                          {selectedProductData.category}
+                        </p>
+                      </div>
+                    </div>
+                    <p className="text-white/90 leading-relaxed max-w-3xl">
+                      {selectedProductData.description}
+                    </p>
+                  </div>
+                </div>
 
-                          {/* Show technical specs only for BOE and AI-LA products */}
-                          {(selectedPartner === 'boe' ||
-                            selectedPartner === 'ai-la') && (
-                            <div className="grid grid-cols-2 gap-4 text-sm">
-                              {version.screenSize && (
+                <div className="bg-white rounded-xl shadow-lg p-6 sm:p-8 mb-8">
+                  <div className="flex flex-col md:flex-row gap-8">
+                    {selectedProductData.image && (
+                      <div className="md:w-80 flex-shrink-0 bg-slate-50 rounded-xl p-4 flex items-center justify-center">
+                        <SafeImage
+                          src={selectedProductData.image}
+                          alt={selectedProductData.name.trim()}
+                          className="max-h-56 w-auto object-contain"
+                        />
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <h3 className="text-xl font-bold text-slate-900 mb-3">
+                        Overview
+                      </h3>
+                      {selectedProductData.partnerDescription ? (
+                        <ul className="space-y-2">
+                          {selectedProductData.partnerDescription
+                            .split('\n')
+                            .filter((point) => point.trim().length > 0)
+                            .map((point, index) => (
+                              <li key={index} className="flex items-start">
+                                <CheckCircle className="w-4 h-4 text-green-500 mr-3 mt-1 flex-shrink-0" />
+                                <span className="text-slate-600 leading-relaxed">
+                                  {point.replace('• ', '')}
+                                </span>
+                              </li>
+                            ))}
+                        </ul>
+                      ) : (
+                        <p className="text-slate-600 leading-relaxed">
+                          {selectedProductData.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Comparison table for multi-version display brands */}
+                {(selectedPartner === 'boe' ||
+                  selectedPartner === 'ai-la' ||
+                  selectedPartner === 'Nuera Commuincations' ||
+                  selectedPartner === 'Polytron') &&
+                selectedProductData.versions.length > 1 ? (
+                  <ComparisonTable
+                    productName={selectedProductData.name}
+                    versions={selectedProductData.versions}
+                  />
+                ) : (
+                  <div className="mb-8">
+                    <h3 className="text-2xl font-bold text-slate-900 mb-6">
+                      {selectedProductData.versions.length > 1
+                        ? 'Available Versions'
+                        : 'Product Details'}
+                    </h3>
+
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                      {selectedProductData.versions.map((version, index) => (
+                        <div
+                          key={index}
+                          className="bg-white rounded-xl shadow-lg p-6 hover:shadow-2xl transition-all duration-300"
+                        >
+                          <div className="mb-6">
+                            <h4 className="text-xl font-bold text-slate-900 mb-4">
+                              {version.name}
+                            </h4>
+
+                            {(selectedPartner === 'boe' ||
+                              selectedPartner === 'ai-la') && (
+                              <div className="grid grid-cols-2 gap-4 text-sm bg-slate-50 rounded-lg p-4">
+                                {version.screenSize && (
+                                  <div>
+                                    <span className="text-slate-500">
+                                      Screen Size
+                                    </span>
+                                    <p className="font-medium text-slate-900">
+                                      {version.screenSize}
+                                    </p>
+                                  </div>
+                                )}
                                 <div>
-                                  <span className="text-gray-500">
-                                    Screen Size:
+                                  <span className="text-slate-500">
+                                    Resolution
                                   </span>
-                                  <p className="font-medium">
-                                    {version.screenSize}
+                                  <p className="font-medium text-slate-900">
+                                    {version.resolution}
                                   </p>
                                 </div>
-                              )}
-                              <div>
-                                <span className="text-gray-500">
-                                  Resolution:
-                                </span>
-                                <p className="font-medium">
-                                  {version.resolution}
-                                </p>
-                              </div>
-                              <div>
-                                <span className="text-gray-500">
-                                  Brightness:
-                                </span>
-                                <p className="font-medium">
-                                  {version.brightness}
-                                </p>
-                              </div>
-                              <div>
-                                <span className="text-gray-500">
-                                  OS Version:
-                                </span>
-                                <p className="font-medium">
-                                  {[
-                                    version.specifications['Operating System'],
-                                    version.specifications['OS'],
-                                  ]
-                                    .filter(Boolean) // Filter out any undefined or null values
-                                    .join(' Android') || 'Linux'}
-                                  , {'Android '}
-                                </p>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Features - shown for all products */}
-                        <div className="mb-6">
-                          <h5 className="font-semibold text-gray-800 mb-3">
-                            Key Features
-                          </h5>
-                          <div className="space-y-2">
-                            {version.features.map((feature, featureIndex) => (
-                              <div
-                                key={featureIndex}
-                                className="flex items-center"
-                              >
-                                <CheckCircle className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
-                                <span className="text-sm text-gray-700">
-                                  {feature}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Applications - shown for all products */}
-                        <div className="mb-6">
-                          <h5 className="font-semibold text-gray-800 mb-3">
-                            Applications
-                          </h5>
-                          <div className="flex flex-wrap gap-2">
-                            {version.applications.map((app, appIndex) => (
-                              <span
-                                key={appIndex}
-                                className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium"
-                              >
-                                {app}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Specifications - shown only for BOE and AI-LA products */}
-                        {(selectedPartner === 'boe' ||
-                          selectedPartner === 'ai-la') && (
-                          <div>
-                            <h5 className="font-semibold text-gray-800 mb-3">
-                              Specifications
-                            </h5>
-                            <div className="space-y-2 max-h-40 overflow-y-auto">
-                              {/* Only display the filtered specifications */}
-                              {[
-                                {
-                                  key: 'Brightness',
-                                  value: version.brightness,
-                                },
-                                {
-                                  key: 'Screen Size',
-                                  value: version.screenSize,
-                                },
-                                {
-                                  key: 'Resolution',
-                                  value: version.resolution,
-                                },
-                                {
-                                  key: 'OS Version',
-                                  value:
-                                    [
+                                <div>
+                                  <span className="text-slate-500">
+                                    Brightness
+                                  </span>
+                                  <p className="font-medium text-slate-900">
+                                    {version.brightness}
+                                  </p>
+                                </div>
+                                <div>
+                                  <span className="text-slate-500">
+                                    OS Version
+                                  </span>
+                                  <p className="font-medium text-slate-900">
+                                    {[
                                       version.specifications[
                                         'Operating System'
                                       ],
                                       version.specifications['OS'],
                                     ]
-                                      .filter(Boolean) // Filter out any undefined or null values
-                                      .join(' & ') || 'N/A', // Join with ' & ' if both exist
-                                },
-                              ].map(
-                                ({ key, value }) =>
-                                  value && (
-                                    <div
-                                      key={key}
-                                      className="flex justify-between text-sm"
-                                    >
-                                      <span className="text-gray-600">
-                                        {key}:
-                                      </span>
-                                      <span className="font-medium text-gray-900">
-                                        {value}
-                                      </span>
-                                    </div>
-                                  )
-                              )}
+                                      .filter(Boolean)
+                                      .join(' Android') || 'Linux'}
+                                    , {'Android '}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="mb-6">
+                            <h5 className="font-semibold text-slate-800 mb-3">
+                              Key Features
+                            </h5>
+                            <div className="space-y-2">
+                              {version.features.map((feature, featureIndex) => (
+                                <div
+                                  key={featureIndex}
+                                  className="flex items-start"
+                                >
+                                  <CheckCircle className="w-4 h-4 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
+                                  <span className="text-sm text-slate-700">
+                                    {feature}
+                                  </span>
+                                </div>
+                              ))}
                             </div>
                           </div>
-                        )}
-                      </div>
-                    ))}
+
+                          <div className="mb-6">
+                            <h5 className="font-semibold text-slate-800 mb-3">
+                              Applications
+                            </h5>
+                            <div className="flex flex-wrap gap-2">
+                              {version.applications.map((app, appIndex) => (
+                                <span
+                                  key={appIndex}
+                                  className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium"
+                                >
+                                  {app}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+
+                          {(selectedPartner === 'boe' ||
+                            selectedPartner === 'ai-la') && (
+                            <div className="border-t border-slate-100 pt-4">
+                              <h5 className="font-semibold text-slate-800 mb-3">
+                                Specifications
+                              </h5>
+                              <div className="space-y-2 max-h-40 overflow-y-auto">
+                                {[
+                                  {
+                                    key: 'Brightness',
+                                    value: version.brightness,
+                                  },
+                                  {
+                                    key: 'Screen Size',
+                                    value: version.screenSize,
+                                  },
+                                  {
+                                    key: 'Resolution',
+                                    value: version.resolution,
+                                  },
+                                  {
+                                    key: 'OS Version',
+                                    value:
+                                      [
+                                        version.specifications[
+                                          'Operating System'
+                                        ],
+                                        version.specifications['OS'],
+                                      ]
+                                        .filter(Boolean)
+                                        .join(' & ') || 'N/A',
+                                  },
+                                ].map(
+                                  ({ key, value }) =>
+                                    value && (
+                                      <div
+                                        key={key}
+                                        className="flex justify-between text-sm"
+                                      >
+                                        <span className="text-slate-500">
+                                          {key}
+                                        </span>
+                                        <span className="font-medium text-slate-900">
+                                          {value}
+                                        </span>
+                                      </div>
+                                    )
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
-          )}
+                )}
+              </div>
+            )}
+          </div>
         </div>
-      </section>
+      </div>
+
       <Footer />
     </div>
   );

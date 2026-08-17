@@ -93,6 +93,8 @@ interface Category {
   description: string;
   icon: React.ComponentType<any>;
   color: string;
+  /** Background image for the category card — file name in /public. */
+  image?: string;
   brands: CategoryBrand[];
 }
 
@@ -104,6 +106,7 @@ const CATEGORIES: Category[] = [
       'Professional displays, LED walls, projection and digital signage — from panel-level manufacturing to complete visual installations.',
     icon: Monitor,
     color: 'from-indigo-500 to-blue-600',
+    image: 'vwseries.png',
     brands: [
       { name: 'AI-LA', logo: 'ai-la.png', partnerId: 'ai-la' },
       { name: 'BOE', logo: 'boe1.png', partnerId: 'boe' },
@@ -117,6 +120,7 @@ const CATEGORIES: Category[] = [
       'End-to-end audio-visual systems for meeting rooms, auditoriums and control rooms — signal distribution, room kits and integrated environments.',
     icon: Presentation,
     color: 'from-sky-500 to-cyan-600',
+    image: 'av.jpg',
     brands: [
       { name: 'V View', logo: 'vview.png', partnerId: 'vview' },
       {
@@ -134,6 +138,7 @@ const CATEGORIES: Category[] = [
       'Meeting and collaboration technology — video conferencing, streaming, audio capture and the platforms that connect distributed teams.',
     icon: MessagesSquare,
     color: 'from-violet-500 to-purple-600',
+    image: 'coworkgoto.png',
     brands: [
       { name: 'Mago', logo: 'mago1.png', route: '/mago-solutions' },
       { name: 'Pexip' },
@@ -154,6 +159,7 @@ const CATEGORIES: Category[] = [
       'Headsets, wearables and immersive platforms for training, remote assistance and enterprise extended-reality deployments.',
     icon: GlassesIcon,
     color: 'from-fuchsia-500 to-pink-600',
+    image: 'vr.jpg.jpg',
     brands: [
       { name: 'HTC VIVE', logo: 'vive1.png', partnerId: 'htc-vive' },
       { name: 'RealWear' },
@@ -166,6 +172,7 @@ const CATEGORIES: Category[] = [
       'Photorealistic 3D reconstruction, spatial simulation and immersive visualisation environments for planning and operations.',
     icon: Boxes,
     color: 'from-teal-500 to-emerald-600',
+    image: 'townshipgoto.png',
     brands: [
       { name: 'Viverse', logo: 'viverse1.png', route: '/Viverse-solutions' },
       { name: 'Vizzio', logo: 'vizzio1.png', partnerId: 'vizzio' },
@@ -179,6 +186,7 @@ const CATEGORIES: Category[] = [
       'Camera-based intelligence — inspection, monitoring, analytics and remote expert guidance powered by computer vision.',
     icon: Eye,
     color: 'from-emerald-500 to-green-600',
+    image: 'industry.jpg',
     brands: [
       { name: 'Polytron', logo: 'polytron copy.png', partnerId: 'Polytron' },
       { name: 'Camsense', logo: 'camsense.png' },
@@ -194,6 +202,7 @@ const CATEGORIES: Category[] = [
       'Applied AI platforms for the enterprise — knowledge, language, diagnostics and decision support built on production-grade models.',
     icon: BrainCircuit,
     color: 'from-amber-500 to-orange-600',
+    image: 'ai.jpg',
     brands: [
       { name: 'Napster', logo: 'napster1.png', route: '/napster-solutions' },
       { name: 'XRAI', logo: 'xrai1.png', route: '/xrai-solutions' },
@@ -207,6 +216,7 @@ const CATEGORIES: Category[] = [
       'Wireless sensing, condition monitoring and connected-building infrastructure that makes physical spaces measurable.',
     icon: Radio,
     color: 'from-rose-500 to-red-600',
+    image: 'workplacegoto.png',
     brands: [
       {
         name: 'Disrupt-X',
@@ -228,6 +238,7 @@ const CATEGORIES: Category[] = [
       'Platforms for managing assets, properties and creative operations across their full lifecycle.',
     icon: Workflow,
     color: 'from-orange-500 to-amber-600',
+    image: 'propgoto smart.png',
     brands: [
       {
         name: 'Property Automate',
@@ -244,6 +255,7 @@ const CATEGORIES: Category[] = [
       'Wired and wireless network infrastructure, guest access and captive-portal platforms for demanding environments.',
     icon: Network,
     color: 'from-cyan-500 to-blue-600',
+    image: 'advancednetwork.png',
     brands: [
       { name: 'Weblib', logo: 'weblib1.png', route: '/weblib-solutions' },
       { name: 'G-Reigns', logo: 'g reigns1.png', partnerId: 'g-reigns' },
@@ -257,6 +269,7 @@ const CATEGORIES: Category[] = [
       'Servers, storage and compute platforms underpinning enterprise workloads, virtualisation and AI training.',
     icon: Server,
     color: 'from-slate-500 to-slate-700',
+    image: 'carriercore.png',
     brands: [{ name: 'Supermicro' }],
   },
 ];
@@ -5903,7 +5916,15 @@ const ProductsPage: React.FC = () => {
                     <div
                       className={`h-56 overflow-hidden relative bg-gradient-to-br ${category.color}`}
                     >
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                      <SafeImage
+                        src={category.image}
+                        alt={category.name}
+                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      />
+                      <div
+                        className={`absolute inset-0 bg-gradient-to-br ${category.color} opacity-75 mix-blend-multiply`}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/10" />
                       <div className="absolute inset-x-0 top-0 h-24 flex items-center justify-center">
                         <category.icon className="w-12 h-12 text-white/90 drop-shadow-lg group-hover:scale-110 transition-transform duration-500" />
                       </div>
@@ -5931,6 +5952,14 @@ const ProductsPage: React.FC = () => {
                 <div
                   className={`relative rounded-xl overflow-hidden shadow-lg mb-6 bg-gradient-to-br ${selectedCategoryData.color}`}
                 >
+                  <SafeImage
+                    src={selectedCategoryData.image}
+                    alt={selectedCategoryData.name}
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                  <div
+                    className={`absolute inset-0 bg-gradient-to-br ${selectedCategoryData.color} opacity-80 mix-blend-multiply`}
+                  />
                   <div className="absolute inset-0 bg-black/45" />
                   <div className="relative p-6 sm:p-8">
                     <button

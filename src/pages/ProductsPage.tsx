@@ -5832,6 +5832,63 @@ const ProductsPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Scrolling category carousel (left → right, pauses on hover) */}
+      <div className="bbs-marquee relative overflow-hidden bg-slate-900 border-y border-white/10 py-4">
+        <style>{`
+          @keyframes bbs-marquee-ltr {
+            from { transform: translateX(-50%); }
+            to   { transform: translateX(0); }
+          }
+          .bbs-marquee-track {
+            display: flex;
+            width: max-content;
+            animation: bbs-marquee-ltr 50s linear infinite;
+          }
+          .bbs-marquee:hover .bbs-marquee-track {
+            animation-play-state: paused;
+          }
+          @media (prefers-reduced-motion: reduce) {
+            .bbs-marquee-track { animation: none; }
+          }
+        `}</style>
+
+        <div className="bbs-marquee-track">
+          {[0, 1].map((copy) => (
+            <div
+              key={copy}
+              className="flex items-center flex-shrink-0"
+              aria-hidden={copy === 1}
+            >
+              {CATEGORIES.map((category) => (
+                <button
+                  key={`${copy}-${category.id}`}
+                  type="button"
+                  tabIndex={copy === 1 ? -1 : 0}
+                  onClick={() => handleCategorySelect(category.id)}
+                  className={`group flex items-center gap-2.5 mx-3 px-4 py-2 rounded-full whitespace-nowrap transition-colors ${
+                    category.id === selectedCategory
+                      ? 'bg-white/20 text-white'
+                      : 'text-white/70 hover:bg-white/10 hover:text-white'
+                  }`}
+                >
+                  <span
+                    className={`flex items-center justify-center w-7 h-7 rounded-full bg-gradient-to-br ${category.color}`}
+                  >
+                    <category.icon className="w-4 h-4 text-white" />
+                  </span>
+                  <span className="text-sm font-medium">{category.name}</span>
+                  <span className="text-white/25 select-none">•</span>
+                </button>
+              ))}
+            </div>
+          ))}
+        </div>
+
+        {/* Edge fades */}
+        <div className="pointer-events-none absolute inset-y-0 left-0 w-16 sm:w-24 bg-gradient-to-r from-slate-900 to-transparent" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-16 sm:w-24 bg-gradient-to-l from-slate-900 to-transparent" />
+      </div>
+
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Breadcrumb */}
         <nav className="flex items-center flex-wrap gap-2 text-sm mb-6">

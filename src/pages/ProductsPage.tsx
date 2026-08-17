@@ -6057,15 +6057,41 @@ const ProductsPage: React.FC = () => {
           </div>
 
           {/* Main content */}
-          <div className="flex-1">
-            {/* 1. Category grid */}
+          <div className="flex-1 min-w-0">
+            {/* 1. Category carousel — scrolls left to right, pauses on hover */}
             {!selectedCategory && (
-              <div className="grid sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                {CATEGORIES.map((category) => (
+              <div className="bbs-cards relative overflow-hidden rounded-xl -my-3 py-3">
+                <style>{`
+                  @keyframes bbs-cards-ltr {
+                    from { transform: translateX(-50%); }
+                    to   { transform: translateX(0); }
+                  }
+                  .bbs-cards-track {
+                    display: flex;
+                    width: max-content;
+                    animation: bbs-cards-ltr 70s linear infinite;
+                  }
+                  .bbs-cards:hover .bbs-cards-track {
+                    animation-play-state: paused;
+                  }
+                  @media (prefers-reduced-motion: reduce) {
+                    .bbs-cards-track { animation: none; }
+                  }
+                `}</style>
+
+                <div className="bbs-cards-track">
+                  {[0, 1].map((copy) => (
+                    <div
+                      key={copy}
+                      className="flex flex-shrink-0"
+                      aria-hidden={copy === 1}
+                    >
+                      {CATEGORIES.map((category) => (
                   <button
-                    key={category.id}
+                    key={`${copy}-${category.id}`}
+                    tabIndex={copy === 1 ? -1 : 0}
                     onClick={() => handleCategorySelect(category.id)}
-                    className="rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 text-left group relative"
+                    className="w-72 sm:w-80 flex-shrink-0 mx-3 rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 text-left group relative"
                   >
                     <div
                       className={`h-56 overflow-hidden relative bg-gradient-to-br ${category.color}`}
@@ -6079,9 +6105,6 @@ const ProductsPage: React.FC = () => {
                         className={`absolute inset-0 bg-gradient-to-br ${category.color} opacity-75 mix-blend-multiply`}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/10" />
-                      <div className="absolute inset-x-0 top-0 h-24 flex items-center justify-center">
-                        <category.icon className="w-12 h-12 text-white/90 drop-shadow-lg group-hover:scale-110 transition-transform duration-500" />
-                      </div>
                       <div className="absolute bottom-0 left-0 right-0 p-4 flex items-end justify-between gap-3">
                         <div className="min-w-0">
                           <h3 className="text-base sm:text-lg font-bold text-white drop-shadow leading-tight">
@@ -6096,7 +6119,11 @@ const ProductsPage: React.FC = () => {
                       </div>
                     </div>
                   </button>
-                ))}
+                      ))}
+                    </div>
+                  ))}
+                </div>
+
               </div>
             )}
 

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {
   ChevronRight,
+  ChevronDown,
   Monitor,
   Presentation,
   MessagesSquare,
@@ -287,6 +288,7 @@ const ASSET_FALLBACKS: Record<string, string> = {
   'byh.jpg': 'byh copy.jpg',
   'oledkiosk2.png': 'oledkiosk.png',
   'vizzio1.png': 'vizzio copy.png',
+  'mago1.png': 'mago2.png',
 };
 
 const assetUrl = (file: string) =>
@@ -317,6 +319,8 @@ const ProductsPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedPartner, setSelectedPartner] = useState<string>('');
   const [selectedProduct, setSelectedProduct] = useState<string>('');
+  /** Which sidebar category has its brand list expanded. */
+  const [expandedCategory, setExpandedCategory] = useState<string>('');
 
   // BOE BKY-A Product Versions based on the specifications
   const bkyAVersions: ProductVersion[] = [
@@ -5742,6 +5746,7 @@ const ProductsPage: React.FC = () => {
 
   const handleCategorySelect = (categoryId: string) => {
     setSelectedCategory(categoryId);
+    setExpandedCategory(categoryId);
     setSelectedPartner('');
     setSelectedProduct('');
     scrollToContent();
@@ -5753,6 +5758,26 @@ const ProductsPage: React.FC = () => {
       return;
     }
     if (!brand.partnerId) return;
+    setSelectedPartner(brand.partnerId);
+    setSelectedProduct('');
+    scrollToContent();
+  };
+
+  /**
+   * Brand clicked from the sidebar dropdown — make sure the owning category is
+   * the selected one so the breadcrumb stays in sync, then open the brand.
+   */
+  const handleSidebarBrandSelect = (
+    categoryId: string,
+    brand: CategoryBrand
+  ) => {
+    if (brand.route) {
+      navigate(brand.route);
+      return;
+    }
+    if (!brand.partnerId) return;
+    setSelectedCategory(categoryId);
+    setExpandedCategory(categoryId);
     setSelectedPartner(brand.partnerId);
     setSelectedProduct('');
     scrollToContent();
@@ -5874,28 +5899,100 @@ const ProductsPage: React.FC = () => {
               <h3 className="text-xl font-bold text-slate-900 mb-4">
                 Categories
               </h3>
-              <div className="space-y-1">
+              <div className="space-y-1 max-h-[70vh] overflow-y-auto -mr-2 pr-2">
                 {CATEGORIES.map((category) => {
                   const isActive = category.id === selectedCategory;
+                  const isExpanded = category.id === expandedCategory;
                   return (
-                    <button
-                      key={category.id}
-                      onClick={() => handleCategorySelect(category.id)}
-                      className={`flex items-start w-full text-left px-4 py-3 rounded-lg transition-colors ${
-                        isActive
-                          ? 'bg-blue-50 text-blue-700 font-medium'
-                          : 'text-slate-700 hover:bg-slate-100'
-                      }`}
-                    >
-                      <ChevronRight
-                        className={`w-4 h-4 mr-3 mt-0.5 flex-shrink-0 ${
-                          isActive ? 'text-blue-600' : 'text-slate-400'
+                    <div key={category.id}>
+                      <div
+                        className={`flex items-start rounded-lg transition-colors ${
+                          isActive
+                            ? 'bg-blue-50 text-blue-700 font-medium'
+                            : 'text-slate-700 hover:bg-slate-100'
                         }`}
-                      />
-                      <span className="text-sm leading-snug">
-                        {category.name}
-                      </span>
-                    </button>
+                      >
+                        <button
+                          onClick={() => handleCategorySelect(category.id)}
+                          className="flex-1 text-left pl-4 py-3 min-w-0"
+                        >
+                          <span className="text-sm leading-snug">
+                            {category.name}
+                          </span>
+                        </button>
+                        <button
+                          onClick={() =>
+                            setExpandedCategory(isExpanded ? '' : category.id)
+                          }
+                          aria-expanded={isExpanded}
+                          aria-label={`${isExpanded ? 'Hide' : 'Show'} brands in ${
+                            category.name
+                          }`}
+                          className="flex-shrink-0 px-3 py-3 self-stretch flex items-start"
+                        >
+                          <ChevronDown
+                            className={`w-4 h-4 mt-0.5 transition-transform duration-200 ${
+                              isExpanded ? 'rotate-180' : ''
+                            } ${isActive ? 'text-blue-600' : 'text-slate-400'}`}
+                          />
+                        </button>
+                      </div>
+
+                      {isExpanded && (
+                        <ul className="mt-1 mb-2 ml-4 pl-3 border-l border-slate-200 space-y-0.5">
+                          {category.brands.map((brand) => {
+                            const partner = partners.find(
+                              (p) => p.id === brand.partnerId
+                            );
+                            const isInteractive = Boolean(
+                              brand.route || partner
+                            );
+                            const isBrandActive =
+                              isActive &&
+                              Boolean(brand.partnerId) &&
+                              brand.partnerId === selectedPartner;
+
+                            return (
+                              <li key={`${category.id}-${brand.name}`}>
+                                <button
+                                  onClick={() =>
+                                    handleSidebarBrandSelect(category.id, brand)
+                                  }
+                                  disabled={!isInteractive}
+                                  aria-disabled={!isInteractive}
+                                  className={`flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
+                                    isBrandActive
+                                      ? 'bg-blue-100 text-blue-700 font-medium'
+                                      : isInteractive
+                                      ? 'text-slate-600 hover:bg-slate-100 hover:text-blue-600'
+                                      : 'text-slate-400 cursor-default'
+                                  }`}
+                                >
+                                  <SafeImage
+                                    src={brand.logo}
+                                    alt=""
+                                    className="w-11 h-6 object-contain object-left flex-shrink-0"
+                                    fallback={
+                                      <span className="w-11 h-6 flex-shrink-0 flex items-center justify-center rounded bg-slate-100 text-[11px] font-semibold text-slate-500">
+                                        {brand.name.trim().charAt(0)}
+                                      </span>
+                                    }
+                                  />
+                                  <span className="flex-1 min-w-0 truncate">
+                                    {brand.name}
+                                  </span>
+                                  {!isInteractive && (
+                                    <span className="text-[10px] uppercase tracking-wide text-slate-400 flex-shrink-0">
+                                      Soon
+                                    </span>
+                                  )}
+                                </button>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                    </div>
                   );
                 })}
               </div>

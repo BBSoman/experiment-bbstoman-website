@@ -7410,14 +7410,6 @@ const ProductsPage: React.FC = () => {
               >
                 Talk to Our Team
               </Link>
-              <a
-                href="https://wa.me/96892882417"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-all"
-              >
-                Chat on WhatsApp
-              </a>
             </div>
           </div>
         </div>

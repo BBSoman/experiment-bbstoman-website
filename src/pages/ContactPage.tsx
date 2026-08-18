@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   Mail,
   Phone,
@@ -15,14 +15,58 @@ import emailjs from '@emailjs/browser';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
+/**
+ * CTAs elsewhere on the site link here with context, e.g.
+ *   /contact?brand=Netgear
+ *   /contact?brand=BOE&product=BTQ%20Series&intent=demo
+ *   /contact?email=someone@example.com&intent=newsletter
+ * These params pre-fill the form so the visitor does not retype what they
+ * were already looking at.
+ */
+const buildPrefilledMessage = (
+  brand: string,
+  product: string,
+  intent: string
+): string => {
+  if (intent === 'newsletter') {
+    return 'Please add me to your mailing list for news and product updates.';
+  }
+  if (product && brand) {
+    return `I would like more information about ${product} (${brand}).`;
+  }
+  if (product) {
+    return `I would like more information about ${product}.`;
+  }
+  if (brand) {
+    return `I would like more information about ${brand} products and solutions.`;
+  }
+  return '';
+};
+
+const INTENT_TO_SERVICE: Record<string, string> = {
+  quote: 'sales',
+  sales: 'sales',
+  demo: 'demo',
+  consultation: 'consultant',
+  consultant: 'consultant',
+  support: 'Support',
+  media: 'Media',
+  newsletter: 'other',
+};
+
 const ContactPage: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const prefillBrand = searchParams.get('brand') || '';
+  const prefillProduct = searchParams.get('product') || '';
+  const prefillIntent = searchParams.get('intent') || '';
+
   const [formData, setFormData] = useState({
     name: '',
-    email: '',
+    email: searchParams.get('email') || '',
     company: '',
     phone: '',
-    service: '',
-    message: '',
+    service: INTENT_TO_SERVICE[prefillIntent.toLowerCase()] || '',
+    message: buildPrefilledMessage(prefillBrand, prefillProduct, prefillIntent),
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -165,7 +209,19 @@ const ContactPage: React.FC = () => {
                         Email
                       </h4>
                       <p className="text-gray-600">
-                         media@bbst.ai / support@bbst.ai / chitra@bbst.ai
+                        {['media@bbst.ai', 'support@bbst.ai', 'chitra@bbst.ai'].map(
+                          (address, index) => (
+                            <React.Fragment key={address}>
+                              {index > 0 && ' / '}
+                              <a
+                                href={`mailto:${address}`}
+                                className="hover:text-blue-600 hover:underline transition-colors"
+                              >
+                                {address}
+                              </a>
+                            </React.Fragment>
+                          )
+                        )}
                       </p>
                     </div>
                   </div>
@@ -178,7 +234,23 @@ const ContactPage: React.FC = () => {
                       <h4 className="font-semibold text-gray-900 mb-1">
                         Phone
                       </h4>
-                      <p className="text-gray-600">+968 92882417</p>
+                      <p className="text-gray-600">
+                        <a
+                          href="tel:+96892882417"
+                          className="hover:text-purple-600 hover:underline transition-colors"
+                        >
+                          +968 92882417
+                        </a>
+                      </p>
+                      <a
+                        href="https://wa.me/96892882417"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center mt-2 text-sm font-semibold text-green-700 hover:text-green-800 transition-colors"
+                      >
+                        <MessageSquare className="w-4 h-4 mr-1.5" />
+                        Chat on WhatsApp
+                      </a>
                     </div>
                   </div>
 
@@ -190,10 +262,15 @@ const ContactPage: React.FC = () => {
                       <h4 className="font-semibold text-gray-900 mb-1">
                         Office
                       </h4>
-                      <p className="text-gray-600">
+                      <a
+                        href="https://www.google.com/maps/search/?api=1&query=Dohat+Al+Adab+Street,+Al+Khuwair+South,+Muscat+133,+Oman"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-gray-600 hover:text-green-700 hover:underline transition-colors"
+                      >
                         Level 4, Business Center, Building #325 Office #411,
                         Dohat Al Adab Street, Al Khuwair South, Muscat 133, Oman
-                      </p>
+                      </a>
                     </div>
                   </div>
                 </div>

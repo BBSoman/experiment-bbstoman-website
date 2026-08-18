@@ -102,7 +102,7 @@ interface Category {
 const CATEGORIES: Category[] = [
   {
     id: 'display-projection',
-    name: 'Advanced Display & Projection Systems',
+    name: 'Screens, LED Walls & Digital Signage',
     description:
       'Professional displays, LED walls, projection and digital signage — from panel-level manufacturing to complete visual installations.',
     icon: Monitor,
@@ -116,7 +116,7 @@ const CATEGORIES: Category[] = [
   },
   {
     id: 'professional-av',
-    name: 'Integrated Professional AV Solutions',
+    name: 'Meeting Room & AV Systems',
     description:
       'End-to-end audio-visual systems for meeting rooms, auditoriums and control rooms — signal distribution, room kits and integrated environments.',
     icon: Presentation,
@@ -134,7 +134,7 @@ const CATEGORIES: Category[] = [
   },
   {
     id: 'unified-communications',
-    name: 'Unified Communications & Collaboration Platforms',
+    name: 'Video Conferencing & Collaboration',
     description:
       'Meeting and collaboration technology — video conferencing, streaming, audio capture and the platforms that connect distributed teams.',
     icon: MessagesSquare,
@@ -155,7 +155,7 @@ const CATEGORIES: Category[] = [
   },
   {
     id: 'immersive-xr',
-    name: 'Immersive Experience Technologies (XR/VR/MR)',
+    name: 'VR Headsets & Smart Glasses',
     description:
       'Headsets, wearables and immersive platforms for training, remote assistance and enterprise extended-reality deployments.',
     icon: GlassesIcon,
@@ -168,7 +168,7 @@ const CATEGORIES: Category[] = [
   },
   {
     id: 'digital-twin',
-    name: 'Digital Twin & Simulation Solutions',
+    name: '3D Digital Twins & Simulation',
     description:
       'Photorealistic 3D reconstruction, spatial simulation and immersive visualisation environments for planning and operations.',
     icon: Boxes,
@@ -182,7 +182,7 @@ const CATEGORIES: Category[] = [
   },
   {
     id: 'visual-ai',
-    name: 'Visual AI & Computer Vision Solutions',
+    name: 'Smart Cameras & AI Video Analytics',
     description:
       'Camera-based intelligence — inspection, monitoring, analytics and remote expert guidance powered by computer vision.',
     icon: Eye,
@@ -198,7 +198,7 @@ const CATEGORIES: Category[] = [
   },
   {
     id: 'enterprise-ai',
-    name: 'Enterprise Artificial Intelligence Solutions',
+    name: 'AI Tools for Business',
     description:
       'Applied AI platforms for the enterprise — knowledge, language, diagnostics and decision support built on production-grade models.',
     icon: BrainCircuit,
@@ -212,7 +212,7 @@ const CATEGORIES: Category[] = [
   },
   {
     id: 'smart-spaces-iot',
-    name: 'Smart Spaces & IoT Ecosystems',
+    name: 'Smart Buildings & IoT Sensors',
     description:
       'Wireless sensing, condition monitoring and connected-building infrastructure that makes physical spaces measurable.',
     icon: Radio,
@@ -234,7 +234,7 @@ const CATEGORIES: Category[] = [
   },
   {
     id: 'software-operations',
-    name: 'Software Operations & Lifecycle Management',
+    name: 'Property & Facility Management Software',
     description:
       'Platforms for managing assets, properties and creative operations across their full lifecycle.',
     icon: Workflow,
@@ -251,7 +251,7 @@ const CATEGORIES: Category[] = [
   },
   {
     id: 'networking',
-    name: 'Advanced Networking Solutions',
+    name: 'Networking, Wi-Fi & Private 5G',
     description:
       'Wired and wireless network infrastructure, guest access and captive-portal platforms for demanding environments.',
     icon: Network,
@@ -265,7 +265,7 @@ const CATEGORIES: Category[] = [
   },
   {
     id: 'it-infrastructure',
-    name: 'Enterprise IT Infrastructure',
+    name: 'Servers & IT Hardware',
     description:
       'Servers, storage and compute platforms underpinning enterprise workloads, virtualisation and AI training.',
     icon: Server,

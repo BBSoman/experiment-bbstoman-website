@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { ArrowRight, Sparkles, Eye, Brain } from 'lucide-react';
 
 const Hero: React.FC = () => {
@@ -44,14 +45,26 @@ const Hero: React.FC = () => {
               We partner with industry leaders to deliver innovative solutions
               that drive your business forward.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              
-              <a
-                href="/partners"
+            <div className="flex flex-col sm:flex-row flex-wrap gap-4 justify-center lg:justify-start">
+              <Link
+                to="/contact?intent=consultation"
                 className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center"
               >
+                Book a Consultation
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Link>
+              <Link
+                to="/products"
+                className="bg-white/95 text-blue-700 px-8 py-4 rounded-lg font-semibold hover:bg-white transition-all transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center"
+              >
+                Explore Products
+              </Link>
+              <Link
+                to="/partners"
+                className="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-blue-700 transition-all flex items-center justify-center"
+              >
                 Brands
-              </a>
+              </Link>
             </div>
           </div>
 

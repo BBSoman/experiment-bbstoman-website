@@ -6249,6 +6249,16 @@ const ProductsPage: React.FC = () => {
     return { ...group, options: ordered };
   }).filter((group) => group.options.length >= 2);
 
+  /**
+   * Filters are contextual: they only appear once the catalogue has been
+   * narrowed to a category or brand (or a search has been run, since that
+   * also puts a result list on screen). On the landing grid the sidebar is
+   * categories only.
+   */
+  const showFilters =
+    facetOptions.length > 0 &&
+    Boolean(selectedCategory || selectedPartner || trimmedQuery);
+
   const submitSearch = (event: React.FormEvent) => {
     event.preventDefault();
     patchParams({ q: searchDraft.trim(), product: '' });
@@ -6438,110 +6448,20 @@ const ProductsPage: React.FC = () => {
         </nav>
 
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Sidebar */}
-          <div className="lg:w-80 flex-shrink-0 space-y-6">
-            {/* Spec filters — only rendered for scopes that actually have
-                comparable specification data (i.e. the display catalogue).
-                Sparse categories show no panel rather than an empty one. */}
-            {facetOptions.length > 0 && (
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <div className="flex items-center justify-between gap-3">
-                  {/* Collapsed by default on mobile so results stay above the
-                      fold; always open from lg upwards. */}
-                  <button
-                    onClick={() => setFiltersOpen(!filtersOpen)}
-                    aria-expanded={filtersOpen}
-                    className="flex items-center gap-2 text-xl font-bold text-slate-900 lg:cursor-default"
-                  >
-                    <SlidersHorizontal className="w-5 h-5 text-blue-600" />
-                    Filters
-                    {facetCount > 0 && (
-                      <span className="bg-blue-600 text-white text-xs font-semibold rounded-full px-2 py-0.5">
-                        {facetCount}
-                      </span>
-                    )}
-                    <ChevronDown
-                      className={`w-4 h-4 text-slate-400 lg:hidden transition-transform ${
-                        filtersOpen ? 'rotate-180' : ''
-                      }`}
-                    />
-                  </button>
-                  {facetCount > 0 && (
-                    <button
-                      onClick={clearFilters}
-                      className="text-sm text-blue-600 hover:text-blue-700 font-medium flex-shrink-0"
-                    >
-                      Clear all
-                    </button>
-                  )}
-                </div>
-
+          {/* Sidebar — a single panel. Categories are always present; the
+              filter section is appended below them only once a scope is
+              chosen, so the landing grid shows nothing but categories. */}
+          <div className="lg:w-80 flex-shrink-0">
+            <div className="bg-white rounded-xl shadow-lg sticky top-24 overflow-hidden">
+              <div className="p-6">
+                <h3 className="text-xl font-bold text-slate-900 mb-4">
+                  Categories
+                </h3>
                 <div
-                  className={`space-y-6 mt-4 ${
-                    filtersOpen ? 'block' : 'hidden'
-                  } lg:block`}
+                  className={`space-y-1 overflow-y-auto -mr-2 pr-2 ${
+                    showFilters ? 'max-h-[38vh]' : 'max-h-[70vh]'
+                  }`}
                 >
-                  {facetOptions.map((group) => (
-                    <fieldset key={group.key}>
-                      <legend className="font-semibold text-slate-900 mb-2 text-sm">
-                        {group.label}
-                      </legend>
-                      <div className="space-y-1.5">
-                        {group.options.map(([value, count]) => {
-                          const isChecked =
-                            activeFacets[group.key].includes(value);
-                          return (
-                            <label
-                              key={value}
-                              className="flex items-center gap-2.5 cursor-pointer group"
-                            >
-                              <input
-                                type="checkbox"
-                                checked={isChecked}
-                                onChange={() => toggleFacet(group.key, value)}
-                                className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                              />
-                              <span
-                                className={`text-sm flex-1 ${
-                                  isChecked
-                                    ? 'text-blue-700 font-medium'
-                                    : 'text-slate-600 group-hover:text-slate-900'
-                                }`}
-                              >
-                                {value}
-                              </span>
-                              <span className="text-xs text-slate-400">
-                                {count}
-                              </span>
-                            </label>
-                          );
-                        })}
-                      </div>
-                    </fieldset>
-                  ))}
-                </div>
-
-                <p
-                  className={`text-xs text-slate-400 mt-5 leading-relaxed ${
-                    filtersOpen ? 'block' : 'hidden'
-                  } lg:block`}
-                >
-                  Filters apply to{' '}
-                  {selectedPartner
-                    ? selectedBrandName
-                    : selectedCategoryData
-                    ? selectedCategoryData.name
-                    : 'the full catalogue'}
-                  . Counts show matching products.
-                </p>
-              </div>
-            )}
-
-            <div className="bg-white rounded-xl shadow-lg p-6 sticky top-24">
-              <h3 className="text-xl font-bold text-slate-900 mb-4">
-                Categories
-              </h3>
-              <div className="space-y-1 max-h-[70vh] overflow-y-auto -mr-2 pr-2">
                 {CATEGORIES.map((category) => {
                   const isActive = category.id === selectedCategory;
                   const isExpanded = category.id === expandedCategory;
@@ -6637,7 +6557,92 @@ const ProductsPage: React.FC = () => {
                     </div>
                   );
                 })}
+                </div>
               </div>
+
+              {/* Spec filters — same card, below the categories, separated by
+                  a divider. Only rendered once a category (or a search) has
+                  narrowed the catalogue AND the scope actually has comparable
+                  specification data, so sparse categories show nothing. */}
+              {showFilters && (
+                <div className="border-t border-slate-100 bg-slate-50/70 p-6">
+                  <div className="flex items-center justify-between gap-3">
+                    {/* Collapsed by default on mobile so results stay above
+                        the fold; always open from lg upwards. */}
+                    <button
+                      onClick={() => setFiltersOpen(!filtersOpen)}
+                      aria-expanded={filtersOpen}
+                      className="flex items-center gap-2 text-lg font-bold text-slate-900 lg:cursor-default"
+                    >
+                      <SlidersHorizontal className="w-5 h-5 text-blue-600" />
+                      Refine
+                      {facetCount > 0 && (
+                        <span className="bg-blue-600 text-white text-xs font-semibold rounded-full px-2 py-0.5">
+                          {facetCount}
+                        </span>
+                      )}
+                      <ChevronDown
+                        className={`w-4 h-4 text-slate-400 lg:hidden transition-transform ${
+                          filtersOpen ? 'rotate-180' : ''
+                        }`}
+                      />
+                    </button>
+                    {facetCount > 0 && (
+                      <button
+                        onClick={clearFilters}
+                        className="text-sm text-blue-600 hover:text-blue-700 font-medium flex-shrink-0"
+                      >
+                        Clear all
+                      </button>
+                    )}
+                  </div>
+
+                  <div
+                    className={`space-y-5 mt-4 max-h-[45vh] overflow-y-auto -mr-2 pr-2 ${
+                      filtersOpen ? 'block' : 'hidden'
+                    } lg:block`}
+                  >
+                    {facetOptions.map((group) => (
+                      <fieldset key={group.key}>
+                        <legend className="font-semibold text-slate-900 mb-2 text-sm">
+                          {group.label}
+                        </legend>
+                        <div className="space-y-1.5">
+                          {group.options.map(([value, count]) => {
+                            const isChecked =
+                              activeFacets[group.key].includes(value);
+                            return (
+                              <label
+                                key={value}
+                                className="flex items-center gap-2.5 cursor-pointer group"
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={isChecked}
+                                  onChange={() => toggleFacet(group.key, value)}
+                                  className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                />
+                                <span
+                                  className={`text-sm flex-1 ${
+                                    isChecked
+                                      ? 'text-blue-700 font-medium'
+                                      : 'text-slate-600 group-hover:text-slate-900'
+                                  }`}
+                                >
+                                  {value}
+                                </span>
+                                <span className="text-xs text-slate-400">
+                                  {count}
+                                </span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </fieldset>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

@@ -24,7 +24,7 @@ import {
   EarthLockIcon,
   Computer,
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import qm22a from '/qm22a.png';
@@ -99,6 +99,39 @@ interface Category {
   brands: CategoryBrand[];
 }
 
+/**
+ * Builds a link to the contact form carrying the brand / product the visitor
+ * was looking at, so the enquiry arrives with context instead of blank.
+ */
+const contactLink = (params: {
+  brand?: string;
+  product?: string;
+  intent?: string;
+}): string => {
+  const search = new URLSearchParams();
+  if (params.brand) search.set('brand', params.brand.trim());
+  if (params.product) search.set('product', params.product.trim());
+  search.set('intent', params.intent || 'quote');
+  return `/contact?${search.toString()}`;
+};
+
+/**
+ * Brands that have BOTH an in-page catalogue (via `partnerId`) and a dedicated
+ * solution page. The catalogue view links across to the full page.
+ */
+const PARTNER_SOLUTION_ROUTES: Record<string, string> = {
+  boe: '/boe-solutions',
+  'ai-la': '/aila-solutions',
+  'htc-vive': '/htc-solutions',
+  vview: '/vview-solutions',
+  'property-automate': '/property-automate-solutions',
+  'tele-presenz': '/tele-presenz-solutions',
+  Polytron: '/polytron-solutions',
+  vizzio: '/vizzio-solutions',
+  'g-reigns': '/reigns-solutions',
+  'Nuera Commuincations': '/Nuera-solutions',
+};
+
 const CATEGORIES: Category[] = [
   {
     id: 'display-projection',
@@ -142,6 +175,11 @@ const CATEGORIES: Category[] = [
     image: 'coworkgoto.png',
     brands: [
       { name: 'Mago', logo: 'mago1.png', route: '/mago-solutions' },
+      {
+        // No logo file in /public yet — SafeImage falls back to the name.
+        name: 'Nuera Communications',
+        partnerId: 'Nuera Commuincations',
+      },
       { name: 'Pexip' },
       { name: 'Neat' },
       { name: 'Insta360 (Video)' },
@@ -5757,7 +5795,12 @@ const ProductsPage: React.FC = () => {
       navigate(brand.route);
       return;
     }
-    if (!brand.partnerId) return;
+    if (!brand.partnerId) {
+      // No catalogue and no solution page yet — send the visitor to the
+      // contact form with the brand they were interested in pre-filled.
+      navigate(contactLink({ brand: brand.name }));
+      return;
+    }
     setSelectedPartner(brand.partnerId);
     setSelectedProduct('');
     scrollToContent();
@@ -5775,7 +5818,10 @@ const ProductsPage: React.FC = () => {
       navigate(brand.route);
       return;
     }
-    if (!brand.partnerId) return;
+    if (!brand.partnerId) {
+      navigate(contactLink({ brand: brand.name }));
+      return;
+    }
     setSelectedCategory(categoryId);
     setExpandedCategory(categoryId);
     setSelectedPartner(brand.partnerId);
@@ -6142,7 +6188,9 @@ const ProductsPage: React.FC = () => {
                       (p) => p.id === brand.partnerId
                     );
                     const productCount = partner?.products.length || 0;
-                    const isInteractive = Boolean(brand.route || partner);
+                    // Every brand card now leads somewhere: a catalogue, a
+                    // solution page, or an enquiry form for the brand.
+                    const isInteractive = true;
 
                     const label = brand.route
                       ? 'View solutions'
@@ -6150,14 +6198,12 @@ const ProductsPage: React.FC = () => {
                       ? `${productCount} ${
                           productCount === 1 ? 'product' : 'products'
                         }`
-                      : 'Coming soon';
+                      : 'Enquire about this brand';
 
                     return (
                       <button
                         key={`${selectedCategoryData.id}-${brand.name}`}
                         onClick={() => handleBrandSelect(brand)}
-                        disabled={!isInteractive}
-                        aria-disabled={!isInteractive}
                         className={`rounded-xl shadow-lg overflow-hidden text-left group relative transition-all duration-300 ${
                           isInteractive
                             ? 'hover:shadow-2xl transform hover:-translate-y-2 cursor-pointer'
@@ -6262,6 +6308,31 @@ const ProductsPage: React.FC = () => {
                           . Select a product to view versions, features and full
                           specifications.
                         </p>
+
+                        {/* Brand-level CTAs */}
+                        <div className="flex flex-wrap gap-3 mt-6">
+                          <Link
+                            to={contactLink({
+                              brand: selectedBrandName,
+                              intent: 'quote',
+                            })}
+                            className="inline-flex items-center bg-white text-slate-900 px-5 py-2.5 rounded-lg font-semibold text-sm hover:bg-slate-100 transition-colors shadow"
+                          >
+                            Request a Quote
+                            <ChevronRight className="w-4 h-4 ml-1.5" />
+                          </Link>
+                          {PARTNER_SOLUTION_ROUTES[selectedPartnerData.id] && (
+                            <Link
+                              to={PARTNER_SOLUTION_ROUTES[
+                                selectedPartnerData.id
+                              ]}
+                              className="inline-flex items-center border-2 border-white/80 text-white px-5 py-2.5 rounded-lg font-semibold text-sm hover:bg-white hover:text-slate-900 transition-colors"
+                            >
+                              View full {selectedBrandName} solutions
+                              <ChevronRight className="w-4 h-4 ml-1.5" />
+                            </Link>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -6345,6 +6416,31 @@ const ProductsPage: React.FC = () => {
                     <p className="text-white/90 leading-relaxed max-w-3xl">
                       {selectedProductData.description}
                     </p>
+
+                    {/* Product-level CTAs */}
+                    <div className="flex flex-wrap gap-3 mt-6">
+                      <Link
+                        to={contactLink({
+                          brand: selectedBrandName,
+                          product: selectedProductData.name,
+                          intent: 'quote',
+                        })}
+                        className="inline-flex items-center bg-white text-slate-900 px-6 py-3 rounded-lg font-semibold hover:bg-slate-100 transition-colors shadow"
+                      >
+                        Request a Quote
+                        <ChevronRight className="w-4 h-4 ml-1.5" />
+                      </Link>
+                      <Link
+                        to={contactLink({
+                          brand: selectedBrandName,
+                          product: selectedProductData.name,
+                          intent: 'demo',
+                        })}
+                        className="inline-flex items-center border-2 border-white/80 text-white px-6 py-3 rounded-lg font-semibold hover:bg-white hover:text-slate-900 transition-colors"
+                      >
+                        Book a Demo
+                      </Link>
+                    </div>
                   </div>
                 </div>
 
@@ -6559,6 +6655,42 @@ const ProductsPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Closing CTA — present in every state of the catalogue */}
+      <section className="py-16">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 md:p-12 text-center">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Not sure which product fits?
+            </h2>
+            <p className="text-blue-100 mb-8 max-w-2xl mx-auto">
+              Tell us what you are trying to achieve and our team will
+              recommend the right brand, model and configuration for your
+              project.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                to={contactLink({
+                  brand: selectedBrandName,
+                  product: selectedProductData?.name,
+                  intent: 'consultation',
+                })}
+                className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-all transform hover:scale-105"
+              >
+                Talk to Our Team
+              </Link>
+              <a
+                href="https://wa.me/96892882417"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-all"
+              >
+                Chat on WhatsApp
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <Footer />
     </div>

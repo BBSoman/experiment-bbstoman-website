@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ChevronRight,
   ChevronDown,
@@ -23,8 +23,11 @@ import {
   Earth,
   EarthLockIcon,
   Computer,
+  Search,
+  SlidersHorizontal,
+  X,
 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import qm22a from '/qm22a.png';
@@ -352,13 +355,296 @@ const SafeImage: React.FC<{
   );
 };
 
+/* ------------------------------------------------------------------------- *
+ * Spec normalisation
+ *
+ * The catalogue was authored by hand, so the same fact appears in several
+ * shapes: '1920 × 1080 (Full HD)', '1920 × 1080 (FHD)' and '1920*1080' all
+ * mean FHD; brightness is written as '550 nits', '350 cd/m²' and
+ * '≥ 5000 nit'; sizes as '55 inch' and '55 inches'. Filters need one
+ * canonical value per model, so every version is parsed into VersionFacets.
+ * ------------------------------------------------------------------------- */
+
+interface VersionFacets {
+  sizeInches: number | null;
+  sizeBucket: string | null;
+  resolutionClass: string | null;
+  brightnessNits: number | null;
+  brightnessBucket: string | null;
+  panelTypes: string[];
+}
+
+/** Screen size, read from the screenSize field or from the model name. */
+const parseInches = (version: ProductVersion): number | null => {
+  const source = `${version.screenSize || ''} ${version.name || ''}`;
+  const match = source.match(
+    /(\d{2,3}(?:\.\d+)?)\s*(?:inch(?:es)?|in\b|")/i
+  );
+  return match ? parseFloat(match[1]) : null;
+};
+
+const SIZE_BUCKETS: { label: string; min: number; max: number }[] = [
+  { label: 'Under 32"', min: 0, max: 31.99 },
+  { label: '32" – 42"', min: 32, max: 42.99 },
+  { label: '43" – 54"', min: 43, max: 54.99 },
+  { label: '55" – 74"', min: 55, max: 74.99 },
+  { label: '75" and above', min: 75, max: Infinity },
+];
+
+const sizeBucketFor = (inches: number | null): string | null =>
+  inches === null
+    ? null
+    : SIZE_BUCKETS.find((b) => inches >= b.min && inches <= b.max)?.label ||
+      null;
+
+/** Fallback keyword match for models that name the class but not the pixels. */
+const RESOLUTION_KEYWORDS: { pattern: RegExp; label: string }[] = [
+  { pattern: /\b8k\b/i, label: '8K 4320p' },
+  { pattern: /\b4k\b|\buhd\b/i, label: '4K UHD 2160p' },
+  { pattern: /\bw?qhd\b/i, label: 'QHD 1440p' },
+  { pattern: /\bfhd\b|full\s*hd/i, label: 'FHD 1080p' },
+  { pattern: /\bhd\b/i, label: 'HD 720p' },
+];
+
+/**
+ * Classifies a resolution string. Returns null for LED module resolutions
+ * such as '128*64' — those are pixels-per-panel, not a screen resolution,
+ * so they must not pollute the resolution facet.
+ */
+const resolutionClassFor = (raw?: string): string | null => {
+  if (!raw) return null;
+
+  const pixels = raw
+    .replace(/[×xX*]/g, 'x')
+    .replace(/\s+/g, '')
+    .match(/(\d{3,5})x(\d{3,5})/);
+
+  if (pixels) {
+    const width = Number(pixels[1]);
+    const height = Number(pixels[2]);
+    const isUltraWide = width / height >= 2.1;
+
+    if (height >= 4320) return '8K 4320p';
+    if (height >= 2160) return '4K UHD 2160p';
+    if (height >= 1440)
+      return isUltraWide ? 'QHD Ultra Wide 1440p' : 'QHD 1440p';
+    if (height >= 1080) return isUltraWide ? 'FHD Ultra Wide' : 'FHD 1080p';
+    if (height >= 720) return 'HD 720p';
+    return null; // module / panel resolution — not a display class
+  }
+
+  return (
+    RESOLUTION_KEYWORDS.find((entry) => entry.pattern.test(raw))?.label || null
+  );
+};
+
+/** Brightness in nits. 'nit' and 'cd/m²' are the same unit numerically. */
+const parseNits = (raw?: string): number | null => {
+  if (!raw) return null;
+  const match = raw
+    .replace(/,/g, '')
+    .match(/(\d{2,6})(?:\s*[-–~to]+\s*(\d{2,6}))?/);
+  if (!match) return null;
+  const low = Number(match[1]);
+  const high = match[2] ? Number(match[2]) : null;
+  return high ? Math.round((low + high) / 2) : low;
+};
+
+/**
+ * Brightness bucketed by deployment context rather than raw numbers —
+ * a specifier thinks "is this for a lobby or for direct sunlight?".
+ */
+const BRIGHTNESS_BUCKETS: { label: string; min: number; max: number }[] = [
+  { label: 'Indoor (under 700 nits)', min: 0, max: 699 },
+  { label: 'Semi-outdoor (700 – 2,500 nits)', min: 700, max: 2499 },
+  { label: 'Outdoor (2,500+ nits)', min: 2500, max: Infinity },
+];
+
+const brightnessBucketFor = (nits: number | null): string | null =>
+  nits === null
+    ? null
+    : BRIGHTNESS_BUCKETS.find((b) => nits >= b.min && nits <= b.max)?.label ||
+      null;
+
+/** Longest-first so 'OLED' is matched before the 'LED' inside it. */
+const PANEL_TOKENS = [
+  'E-Paper',
+  'MicroLED',
+  'MiniLED',
+  'OLED',
+  'QLED',
+  'LCD',
+  'LED',
+  'COB',
+  'SMD',
+  'DIP',
+  'IPS',
+  'ADS',
+  'TFT',
+  'VA',
+  'TN',
+];
+
+const PANEL_SPEC_KEYS = /panel\s*type|led\s*type|display\s*type|backlight/i;
+
+const panelTypesFor = (version: ProductVersion): string[] => {
+  const sources = Object.entries(version.specifications || {})
+    .filter(([key]) => PANEL_SPEC_KEYS.test(key))
+    .map(([, value]) => value)
+    .join(' ');
+
+  if (!sources) return [];
+
+  let remaining = sources;
+  const found: string[] = [];
+  PANEL_TOKENS.forEach((token) => {
+    const pattern = new RegExp(`(^|[^A-Za-z])${token}([^A-Za-z]|$)`, 'i');
+    if (pattern.test(remaining)) {
+      found.push(token);
+      remaining = remaining.replace(new RegExp(token, 'gi'), ' ');
+    }
+  });
+  return found;
+};
+
+const deriveFacets = (version: ProductVersion): VersionFacets => {
+  const sizeInches = parseInches(version);
+  const brightnessNits = parseNits(version.brightness);
+  return {
+    sizeInches,
+    sizeBucket: sizeBucketFor(sizeInches),
+    resolutionClass: resolutionClassFor(version.resolution),
+    brightnessNits,
+    brightnessBucket: brightnessBucketFor(brightnessNits),
+    panelTypes: panelTypesFor(version),
+  };
+};
+
+/** The four facet groups, in the order they appear in the filter panel. */
+type FacetKey = 'size' | 'res' | 'bright' | 'panel';
+
+const FACET_GROUPS: {
+  key: FacetKey;
+  label: string;
+  /** Fixed display order; values not listed are appended alphabetically. */
+  order?: string[];
+  valuesFor: (facets: VersionFacets) => string[];
+}[] = [
+  {
+    key: 'size',
+    label: 'Screen Size',
+    order: SIZE_BUCKETS.map((b) => b.label),
+    valuesFor: (f) => (f.sizeBucket ? [f.sizeBucket] : []),
+  },
+  {
+    key: 'res',
+    label: 'Display Resolution',
+    order: [
+      '8K 4320p',
+      '4K UHD 2160p',
+      'QHD Ultra Wide 1440p',
+      'QHD 1440p',
+      'FHD Ultra Wide',
+      'FHD 1080p',
+      'HD 720p',
+    ],
+    valuesFor: (f) => (f.resolutionClass ? [f.resolutionClass] : []),
+  },
+  {
+    key: 'bright',
+    label: 'Brightness',
+    order: BRIGHTNESS_BUCKETS.map((b) => b.label),
+    valuesFor: (f) => (f.brightnessBucket ? [f.brightnessBucket] : []),
+  },
+  {
+    key: 'panel',
+    label: 'Display Type',
+    order: PANEL_TOKENS,
+    valuesFor: (f) => f.panelTypes,
+  },
+];
+
 const ProductsPage: React.FC = () => {
   const navigate = useNavigate();
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [selectedPartner, setSelectedPartner] = useState<string>('');
-  const [selectedProduct, setSelectedProduct] = useState<string>('');
+
+  /**
+   * Navigation and filter state lives in the URL, so a category, brand,
+   * product, search or filter combination can be linked to, shared,
+   * bookmarked and indexed. Previously all of this was component state and
+   * every view shared the single /products URL.
+   */
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const patchParams = (updates: Record<string, string>) => {
+    setSearchParams(
+      (previous) => {
+        const next = new URLSearchParams(previous);
+        Object.entries(updates).forEach(([key, value]) => {
+          if (value) next.set(key, value);
+          else next.delete(key);
+        });
+        return next;
+      },
+      { replace: true }
+    );
+  };
+
+  const selectedCategory = searchParams.get('category') || '';
+  const selectedPartner = searchParams.get('brand') || '';
+  const selectedProduct = searchParams.get('product') || '';
+  const searchQuery = searchParams.get('q') || '';
+
+  const setSelectedCategory = (value: string) =>
+    patchParams({ category: value });
+  const setSelectedPartner = (value: string) => patchParams({ brand: value });
+  const setSelectedProduct = (value: string) => patchParams({ product: value });
+
   /** Which sidebar category has its brand list expanded. */
-  const [expandedCategory, setExpandedCategory] = useState<string>('');
+  const [expandedCategory, setExpandedCategory] = useState<string>(
+    searchParams.get('category') || ''
+  );
+
+  /** Local mirror of the search box so typing stays responsive. */
+  const [searchDraft, setSearchDraft] = useState<string>(searchQuery);
+
+  /** Mobile only — the filter panel is always expanded from lg upwards. */
+  const [filtersOpen, setFiltersOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    setSearchDraft(searchQuery);
+  }, [searchQuery]);
+
+  const activeFacets = FACET_GROUPS.reduce<Record<FacetKey, string[]>>(
+    (accumulator, group) => {
+      accumulator[group.key] = (searchParams.get(group.key) || '')
+        .split('|')
+        .filter(Boolean);
+      return accumulator;
+    },
+    { size: [], res: [], bright: [], panel: [] }
+  );
+
+  const facetCount = FACET_GROUPS.reduce(
+    (total, group) => total + activeFacets[group.key].length,
+    0
+  );
+
+  const toggleFacet = (key: FacetKey, value: string) => {
+    const current = activeFacets[key];
+    const next = current.includes(value)
+      ? current.filter((entry) => entry !== value)
+      : [...current, value];
+    patchParams({ [key]: next.join('|'), product: '' });
+  };
+
+  const clearFilters = () =>
+    patchParams({
+      q: '',
+      size: '',
+      res: '',
+      bright: '',
+      panel: '',
+    });
 
   // BOE BKY-A Product Versions based on the specifications
   const bkyAVersions: ProductVersion[] = [
@@ -5783,10 +6069,8 @@ const ProductsPage: React.FC = () => {
   };
 
   const handleCategorySelect = (categoryId: string) => {
-    setSelectedCategory(categoryId);
     setExpandedCategory(categoryId);
-    setSelectedPartner('');
-    setSelectedProduct('');
+    patchParams({ category: categoryId, brand: '', product: '' });
     scrollToContent();
   };
 
@@ -5801,8 +6085,7 @@ const ProductsPage: React.FC = () => {
       navigate(contactLink({ brand: brand.name }));
       return;
     }
-    setSelectedPartner(brand.partnerId);
-    setSelectedProduct('');
+    patchParams({ brand: brand.partnerId, product: '' });
     scrollToContent();
   };
 
@@ -5822,15 +6105,153 @@ const ProductsPage: React.FC = () => {
       navigate(contactLink({ brand: brand.name }));
       return;
     }
-    setSelectedCategory(categoryId);
     setExpandedCategory(categoryId);
-    setSelectedPartner(brand.partnerId);
-    setSelectedProduct('');
+    patchParams({
+      category: categoryId,
+      brand: brand.partnerId,
+      product: '',
+    });
     scrollToContent();
   };
 
   const handleProductSelect = (productId: string) => {
     setSelectedProduct(productId);
+    scrollToContent();
+  };
+
+  /* ---------------------------------------------------------------- *
+   * Search + filter index
+   *
+   * One flat entry per product, carrying its brand, its owning category,
+   * the normalised facets of each model variant, and a lowercase haystack
+   * for keyword search. 49 products / 109 variants, so this is cheap to
+   * rebuild per render.
+   * ---------------------------------------------------------------- */
+  interface IndexEntry {
+    partner: Partner;
+    product: Product;
+    category?: Category;
+    facets: VersionFacets[];
+    haystack: string;
+  }
+
+  const productIndex: IndexEntry[] = partners.flatMap((partner) =>
+    partner.products.map((product) => {
+      const category = CATEGORIES.find((candidate) =>
+        candidate.brands.some((brand) => brand.partnerId === partner.id)
+      );
+      const facets = product.versions.map(deriveFacets);
+
+      const haystack = [
+        product.name,
+        product.category,
+        product.description,
+        partner.name,
+        category?.name || '',
+        ...product.versions.map((version) =>
+          [
+            version.name,
+            version.screenSize || '',
+            version.resolution || '',
+            version.brightness || '',
+            ...Object.values(version.specifications || {}),
+          ].join(' ')
+        ),
+      ]
+        .join(' ')
+        .toLowerCase();
+
+      return { partner, product, category, facets, haystack };
+    })
+  );
+
+  /**
+   * Pool the filters operate on: the whole catalogue, or the current
+   * category / brand when the visitor has already drilled in.
+   */
+  const candidatePool = productIndex.filter((entry) => {
+    if (selectedPartner) return entry.partner.id === selectedPartner;
+    if (selectedCategory) return entry.category?.id === selectedCategory;
+    return true;
+  });
+
+  const matchesQuery = (entry: IndexEntry, query: string): boolean => {
+    const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
+    return terms.every((term) => entry.haystack.includes(term));
+  };
+
+  /**
+   * A product matches when at least one of its model variants satisfies
+   * every active facet group (OR within a group, AND across groups) —
+   * so 'FHD + Outdoor' means one model that is both, not two models that
+   * are each one of them.
+   */
+  const matchesFacets = (
+    entry: IndexEntry,
+    selections: Record<FacetKey, string[]>
+  ): boolean => {
+    const activeGroups = FACET_GROUPS.filter(
+      (group) => selections[group.key].length > 0
+    );
+    if (activeGroups.length === 0) return true;
+
+    return entry.facets.some((facet) =>
+      activeGroups.every((group) =>
+        group
+          .valuesFor(facet)
+          .some((value) => selections[group.key].includes(value))
+      )
+    );
+  };
+
+  const trimmedQuery = searchQuery.trim();
+  const isFiltering = trimmedQuery.length > 0 || facetCount > 0;
+
+  const results = candidatePool.filter(
+    (entry) =>
+      (!trimmedQuery || matchesQuery(entry, trimmedQuery)) &&
+      matchesFacets(entry, activeFacets)
+  );
+
+  /**
+   * Facet options for the panel, with the count each value would return.
+   * A group is only rendered when the pool offers at least two distinct
+   * values — which is why sparse categories never show a filter panel.
+   */
+  const facetOptions = FACET_GROUPS.map((group) => {
+    const counts = new Map<string, number>();
+
+    candidatePool
+      .filter(
+        (entry) =>
+          (!trimmedQuery || matchesQuery(entry, trimmedQuery)) &&
+          matchesFacets(entry, { ...activeFacets, [group.key]: [] })
+      )
+      .forEach((entry) => {
+        const values = new Set(
+          entry.facets.flatMap((facet) => group.valuesFor(facet))
+        );
+        values.forEach((value) =>
+          counts.set(value, (counts.get(value) || 0) + 1)
+        );
+      });
+
+    const ordered = Array.from(counts.entries()).sort((a, b) => {
+      const order = group.order || [];
+      const indexA = order.indexOf(a[0]);
+      const indexB = order.indexOf(b[0]);
+      if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+      if (indexA !== -1) return -1;
+      if (indexB !== -1) return 1;
+      return a[0].localeCompare(b[0]);
+    });
+
+    return { ...group, options: ordered };
+  }).filter((group) => group.options.length >= 2);
+
+  const submitSearch = (event: React.FormEvent) => {
+    event.preventDefault();
+    patchParams({ q: searchDraft.trim(), product: '' });
     scrollToContent();
   };
 
@@ -5853,15 +6274,16 @@ const ProductsPage: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100">
       <Header />
 
-      {/* Hero Banner */}
-      <div className="relative w-full h-80 mt-16">
+      {/* Hero Banner — auto height on small screens so the search box and the
+          category list are never clipped by a fixed height. */}
+      <div className="relative w-full mt-16 py-12 lg:py-0 lg:h-80">
         <img
           src="/av.jpg"
           alt="Our Products"
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/55 to-black/30" />
-        <div className="relative h-full flex flex-col justify-center px-8 sm:px-16 lg:px-24 max-w-4xl">
+        <div className="relative flex flex-col justify-center px-8 sm:px-16 lg:px-24 max-w-4xl lg:h-full">
           <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4 drop-shadow-lg">
             Our Products
           </h1>
@@ -5875,6 +6297,31 @@ const ProductsPage: React.FC = () => {
               Enterprise Artificial Intelligence Solutions
             </span>
           </p>
+
+          {/* Catalogue search — matches product names, categories, model
+              numbers and specification values across every brand. */}
+          <form onSubmit={submitSearch} className="mt-6 max-w-xl">
+            <label htmlFor="product-search" className="sr-only">
+              Search products
+            </label>
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+              <input
+                id="product-search"
+                type="search"
+                value={searchDraft}
+                onChange={(event) => setSearchDraft(event.target.value)}
+                placeholder="Search products, brands or model numbers…"
+                className="w-full pl-12 pr-28 py-3.5 rounded-lg bg-white/95 text-slate-900 placeholder:text-slate-400 shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                type="submit"
+                className="absolute right-2 top-1/2 -translate-y-1/2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-5 py-2 rounded-md font-semibold text-sm hover:from-blue-700 hover:to-purple-700 transition-all"
+              >
+                Search
+              </button>
+            </div>
+          </form>
         </div>
       </div>
 
@@ -5939,11 +6386,9 @@ const ProductsPage: React.FC = () => {
         {/* Breadcrumb */}
         <nav className="flex items-center flex-wrap gap-2 text-sm mb-6">
           <button
-            onClick={() => {
-              setSelectedCategory('');
-              setSelectedPartner('');
-              setSelectedProduct('');
-            }}
+            onClick={() =>
+              patchParams({ category: '', brand: '', product: '' })
+            }
             className={
               selectedCategory
                 ? 'text-slate-500 hover:text-blue-600 transition-colors'
@@ -5956,10 +6401,7 @@ const ProductsPage: React.FC = () => {
             <>
               <ChevronRight className="w-4 h-4 text-slate-400" />
               <button
-                onClick={() => {
-                  setSelectedPartner('');
-                  setSelectedProduct('');
-                }}
+                onClick={() => patchParams({ brand: '', product: '' })}
                 className={
                   selectedPartner
                     ? 'text-slate-500 hover:text-blue-600 transition-colors text-left'
@@ -5997,7 +6439,104 @@ const ProductsPage: React.FC = () => {
 
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Sidebar */}
-          <div className="lg:w-80 flex-shrink-0">
+          <div className="lg:w-80 flex-shrink-0 space-y-6">
+            {/* Spec filters — only rendered for scopes that actually have
+                comparable specification data (i.e. the display catalogue).
+                Sparse categories show no panel rather than an empty one. */}
+            {facetOptions.length > 0 && (
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <div className="flex items-center justify-between gap-3">
+                  {/* Collapsed by default on mobile so results stay above the
+                      fold; always open from lg upwards. */}
+                  <button
+                    onClick={() => setFiltersOpen(!filtersOpen)}
+                    aria-expanded={filtersOpen}
+                    className="flex items-center gap-2 text-xl font-bold text-slate-900 lg:cursor-default"
+                  >
+                    <SlidersHorizontal className="w-5 h-5 text-blue-600" />
+                    Filters
+                    {facetCount > 0 && (
+                      <span className="bg-blue-600 text-white text-xs font-semibold rounded-full px-2 py-0.5">
+                        {facetCount}
+                      </span>
+                    )}
+                    <ChevronDown
+                      className={`w-4 h-4 text-slate-400 lg:hidden transition-transform ${
+                        filtersOpen ? 'rotate-180' : ''
+                      }`}
+                    />
+                  </button>
+                  {facetCount > 0 && (
+                    <button
+                      onClick={clearFilters}
+                      className="text-sm text-blue-600 hover:text-blue-700 font-medium flex-shrink-0"
+                    >
+                      Clear all
+                    </button>
+                  )}
+                </div>
+
+                <div
+                  className={`space-y-6 mt-4 ${
+                    filtersOpen ? 'block' : 'hidden'
+                  } lg:block`}
+                >
+                  {facetOptions.map((group) => (
+                    <fieldset key={group.key}>
+                      <legend className="font-semibold text-slate-900 mb-2 text-sm">
+                        {group.label}
+                      </legend>
+                      <div className="space-y-1.5">
+                        {group.options.map(([value, count]) => {
+                          const isChecked =
+                            activeFacets[group.key].includes(value);
+                          return (
+                            <label
+                              key={value}
+                              className="flex items-center gap-2.5 cursor-pointer group"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={() => toggleFacet(group.key, value)}
+                                className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                              />
+                              <span
+                                className={`text-sm flex-1 ${
+                                  isChecked
+                                    ? 'text-blue-700 font-medium'
+                                    : 'text-slate-600 group-hover:text-slate-900'
+                                }`}
+                              >
+                                {value}
+                              </span>
+                              <span className="text-xs text-slate-400">
+                                {count}
+                              </span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </fieldset>
+                  ))}
+                </div>
+
+                <p
+                  className={`text-xs text-slate-400 mt-5 leading-relaxed ${
+                    filtersOpen ? 'block' : 'hidden'
+                  } lg:block`}
+                >
+                  Filters apply to{' '}
+                  {selectedPartner
+                    ? selectedBrandName
+                    : selectedCategoryData
+                    ? selectedCategoryData.name
+                    : 'the full catalogue'}
+                  . Counts show matching products.
+                </p>
+              </div>
+            )}
+
             <div className="bg-white rounded-xl shadow-lg p-6 sticky top-24">
               <h3 className="text-xl font-bold text-slate-900 mb-4">
                 Categories
@@ -6104,8 +6643,188 @@ const ProductsPage: React.FC = () => {
 
           {/* Main content */}
           <div className="flex-1">
+            {/* 0. Search / filter results — takes over from the drill-down
+                   whenever a query or a facet is active. */}
+            {isFiltering && !selectedProduct && (
+              <div>
+                <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+                  <div className="flex flex-wrap items-baseline justify-between gap-3">
+                    <h2 className="text-2xl font-bold text-slate-900">
+                      {results.length}{' '}
+                      {results.length === 1 ? 'product' : 'products'}
+                      {trimmedQuery && (
+                        <>
+                          {' '}
+                          for{' '}
+                          <span className="text-blue-600">
+                            “{trimmedQuery}”
+                          </span>
+                        </>
+                      )}
+                    </h2>
+                    <button
+                      onClick={clearFilters}
+                      className="text-sm font-medium text-slate-500 hover:text-blue-600 transition-colors"
+                    >
+                      Clear search &amp; filters
+                    </button>
+                  </div>
+
+                  {/* Active filter chips */}
+                  {facetCount > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-4">
+                      {FACET_GROUPS.flatMap((group) =>
+                        activeFacets[group.key].map((value) => (
+                          <button
+                            key={`${group.key}-${value}`}
+                            onClick={() => toggleFacet(group.key, value)}
+                            className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 text-sm px-3 py-1.5 rounded-full hover:bg-blue-100 transition-colors"
+                          >
+                            {value}
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {results.length === 0 ? (
+                  <div className="bg-white rounded-xl shadow-lg p-10 text-center">
+                    <h3 className="text-xl font-bold text-slate-900 mb-2">
+                      No products match that
+                    </h3>
+                    <p className="text-slate-600 mb-6 max-w-md mx-auto">
+                      Try fewer filters or a different term. We also supply
+                      products that are not yet listed here — tell us what you
+                      need and we will source it.
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                      <button
+                        onClick={clearFilters}
+                        className="border-2 border-slate-300 text-slate-700 px-6 py-2.5 rounded-lg font-semibold hover:border-blue-600 hover:text-blue-600 transition-colors"
+                      >
+                        Reset
+                      </button>
+                      <Link
+                        to={contactLink({ intent: 'sales' })}
+                        className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2.5 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all"
+                      >
+                        Ask us to source it
+                      </Link>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {results.map((entry) => {
+                      const matchingModels = entry.product.versions.filter(
+                        (_, index) =>
+                          matchesFacets(
+                            { ...entry, facets: [entry.facets[index]] },
+                            activeFacets
+                          )
+                      );
+
+                      return (
+                        <div
+                          key={`${entry.partner.id}-${entry.product.id}`}
+                          className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 flex flex-col sm:flex-row"
+                        >
+                          <button
+                            onClick={() =>
+                              patchParams({
+                                category: entry.category?.id || '',
+                                brand: entry.partner.id,
+                                product: entry.product.id,
+                              })
+                            }
+                            className="sm:w-56 h-40 sm:h-auto flex-shrink-0 bg-slate-50 relative overflow-hidden group"
+                          >
+                            <SafeImage
+                              src={entry.product.image}
+                              alt={entry.product.name.trim()}
+                              className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-500"
+                              fallback={
+                                <div
+                                  className={`w-full h-full flex items-center justify-center bg-gradient-to-br ${entry.product.color}`}
+                                >
+                                  <entry.product.icon className="w-10 h-10 text-white" />
+                                </div>
+                              }
+                            />
+                          </button>
+
+                          <div className="flex-1 p-5 sm:p-6 min-w-0">
+                            <div className="flex items-center gap-2 mb-1.5 text-xs">
+                              <span className="font-semibold text-blue-600 uppercase tracking-wide">
+                                {entry.partner.name.trim()}
+                              </span>
+                              <span className="text-slate-300">•</span>
+                              <span className="text-slate-500">
+                                {entry.product.category}
+                              </span>
+                            </div>
+
+                            <h3 className="text-lg font-bold text-slate-900 mb-2">
+                              {entry.product.name.trim()}
+                            </h3>
+                            <p className="text-slate-600 text-sm leading-relaxed line-clamp-2 mb-3">
+                              {entry.product.description}
+                            </p>
+
+                            <p className="text-sm text-slate-500 mb-4">
+                              {matchingModels.length}{' '}
+                              {matchingModels.length === 1 ? 'model' : 'models'}
+                              {facetCount > 0 ? ' match' : ' available'}
+                              {matchingModels.length > 0 && (
+                                <span className="text-slate-400">
+                                  {' '}
+                                  —{' '}
+                                  {matchingModels
+                                    .slice(0, 3)
+                                    .map((model) => model.name.trim())
+                                    .join(', ')}
+                                  {matchingModels.length > 3 && '…'}
+                                </span>
+                              )}
+                            </p>
+
+                            <div className="flex flex-wrap gap-3">
+                              <button
+                                onClick={() =>
+                                  patchParams({
+                                    category: entry.category?.id || '',
+                                    brand: entry.partner.id,
+                                    product: entry.product.id,
+                                  })
+                                }
+                                className="inline-flex items-center bg-slate-900 text-white px-4 py-2 rounded-lg font-semibold text-sm hover:bg-slate-800 transition-colors"
+                              >
+                                View details
+                                <ChevronRight className="w-4 h-4 ml-1" />
+                              </button>
+                              <Link
+                                to={contactLink({
+                                  brand: entry.partner.name,
+                                  product: entry.product.name,
+                                  intent: 'quote',
+                                })}
+                                className="inline-flex items-center border-2 border-slate-200 text-slate-700 px-4 py-2 rounded-lg font-semibold text-sm hover:border-blue-600 hover:text-blue-600 transition-colors"
+                              >
+                                Request a Quote
+                              </Link>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* 1. Category grid */}
-            {!selectedCategory && (
+            {!selectedCategory && !isFiltering && (
               <div className="grid sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                 {CATEGORIES.map((category) => (
                   <button
@@ -6144,7 +6863,7 @@ const ProductsPage: React.FC = () => {
             )}
 
             {/* 2. Category detail — brands in this category */}
-            {selectedCategoryData && !selectedPartner && (
+            {selectedCategoryData && !selectedPartner && !isFiltering && (
               <div>
                 <div
                   className={`relative rounded-xl overflow-hidden shadow-lg mb-6 bg-gradient-to-br ${selectedCategoryData.color}`}
@@ -6255,7 +6974,10 @@ const ProductsPage: React.FC = () => {
             )}
 
             {/* 3. Brand detail — product list */}
-            {selectedPartner && !selectedProduct && selectedPartnerData && (
+            {selectedPartner &&
+              !selectedProduct &&
+              selectedPartnerData &&
+              !isFiltering && (
               <div>
                 <div
                   className={`relative rounded-xl overflow-hidden shadow-lg mb-6 bg-gradient-to-br ${selectedPartnerData.color}`}
@@ -6392,7 +7114,11 @@ const ProductsPage: React.FC = () => {
                   className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium mb-4 transition-colors"
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back to {selectedBrandName} Products
+                  {isFiltering
+                    ? `Back to ${results.length} ${
+                        results.length === 1 ? 'result' : 'results'
+                      }`
+                    : `Back to ${selectedBrandName} Products`}
                 </button>
 
                 <div
@@ -6679,6 +7405,14 @@ const ProductsPage: React.FC = () => {
               >
                 Talk to Our Team
               </Link>
+              <a
+                href="https://wa.me/96892882417"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-all"
+              >
+                Chat on WhatsApp
+              </a>
             </div>
           </div>
         </div>

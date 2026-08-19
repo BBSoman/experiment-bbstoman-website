@@ -238,13 +238,22 @@ const THEME_CSS = String.raw`
     padding: 1px;
   }
 
-  /* The partner cards follow the theme like every other card, so only the logo
-     itself keeps a light plate - the panel around it goes dark. */
-  .dark .bg-white:has(> .bg-gray-100\/10) img {
-    box-sizing: content-box;
+  /* The partner cards keep their light panel in dark mode. The brand logos are
+     artwork drawn for a white background - several are black or dark navy and
+     would disappear on a dark card - and the coloured lower half of each card
+     is unchanged by the theme anyway, so a light panel is the consistent read.
+     'bg-white p-6 relative' is unique to that panel, so this needs no :has()
+     and works in every browser. */
+  .dark .bg-white.p-6.relative {
     background-color: #ffffff;
-    border-radius: 0.5rem;
-    padding: 0.375rem 0.5rem;
+  }
+
+  .dark .bg-white.p-6.relative .text-gray-900 {
+    color: #111827;
+  }
+
+  .dark .bg-white.p-6.relative .text-gray-700 {
+    color: #374151;
   }
 
   /* Drop shadows disappear against dark surfaces, so cards get a hairline

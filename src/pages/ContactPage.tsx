@@ -45,14 +45,27 @@ const buildPrefilledMessage = (
 };
 
 /**
- * Oman country code (968) followed by the 8-digit number (92882417), digits
- * only - wa.me rejects a leading "+", spaces or a national trunk zero. Used for
+ * Oman country code (968) followed by the 8-digit number (92882417). WhatsApp
+ * wants digits only - no leading "+", spaces or national trunk zero. Used for
  * both the WhatsApp link and the click-to-call link so the two cannot drift.
  */
 const COUNTRY_CODE = '968';
 const NATIONAL_NUMBER = '92882417';
 const PHONE_DIGITS = `${COUNTRY_CODE}${NATIONAL_NUMBER}`;
 const PHONE_DISPLAY = `+${COUNTRY_CODE} ${NATIONAL_NUMBER}`;
+
+/**
+ * WhatsApp publishes two click-to-chat hosts. The wa.me shortener is the
+ * better known one, but it is a separate domain that some networks and DNS
+ * resolvers fail to resolve at all - it returns NXDOMAIN rather than a block
+ * page, so the visitor just sees "this site can't be reached". api.whatsapp.com
+ * lives under the main whatsapp.com domain and behaves identically, redirecting
+ * to the app when it is installed and to WhatsApp Web when it is not.
+ */
+const whatsappLink = (message: string) =>
+  `https://api.whatsapp.com/send?phone=${PHONE_DIGITS}&text=${encodeURIComponent(
+    message
+  )}`;
 
 const INTENT_TO_SERVICE: Record<string, string> = {
   quote: 'sales',
@@ -88,10 +101,10 @@ const ContactPage: React.FC = () => {
    * with, so someone who arrived from a product page does not have to explain
    * what they were looking at.
    */
-  const whatsappHref = `https://wa.me/${PHONE_DIGITS}?text=${encodeURIComponent(
+  const whatsappHref = whatsappLink(
     buildPrefilledMessage(prefillBrand, prefillProduct, prefillIntent) ||
       'Hello Bright Business Services, I would like to know more about your solutions.'
-  )}`;
+  );
 
   const handleChange = (
     e: React.ChangeEvent<

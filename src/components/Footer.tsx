@@ -8,7 +8,7 @@ import { Zap, Mail, Phone, MapPin, ArrowRight, Linkedin, Twitter, Facebook } fro
  */
 const FACEBOOK_URL = '';
 
-const CONTACT_EMAIL = 'chitra@bbst.ai';
+const CONTACT_EMAIL = 'support@bbst.ai';
 const CONTACT_PHONE_DISPLAY = '+968 92882417';
 const CONTACT_PHONE_DIAL = '+96892882417';
 const OFFICE_MAP_URL =

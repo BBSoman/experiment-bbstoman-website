@@ -251,7 +251,7 @@ const ContactPage: React.FC = () => {
                         Email
                       </h4>
                       <p className="text-gray-600">
-                        {['media@bbst.ai', 'support@bbst.ai', 'chitra@bbst.ai'].map(
+                        {['media@bbst.ai', 'support@bbst.ai', 'sales@bbst.ai'].map(
                           (address, index) => (
                             <React.Fragment key={address}>
                               {index > 0 && ' / '}

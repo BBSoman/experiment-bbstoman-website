@@ -8,6 +8,7 @@ import {
   CheckCircle,
   User,
   Building,
+  MessageCircle,
   MessageSquare,
   ArrowLeft,
 } from 'lucide-react';
@@ -43,6 +44,9 @@ const buildPrefilledMessage = (
   return '';
 };
 
+/** Oman country code + the number shown on this page, digits only. */
+const WHATSAPP_NUMBER = '96892882417';
+
 const INTENT_TO_SERVICE: Record<string, string> = {
   quote: 'sales',
   sales: 'sales',
@@ -71,6 +75,16 @@ const ContactPage: React.FC = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+
+  /**
+   * WhatsApp opens with the same message the form would have been pre-filled
+   * with, so someone who arrived from a product page does not have to explain
+   * what they were looking at.
+   */
+  const whatsappHref = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
+    buildPrefilledMessage(prefillBrand, prefillProduct, prefillIntent) ||
+      'Hello Bright Business Services, I would like to know more about your solutions.'
+  )}`;
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -243,12 +257,13 @@ const ContactPage: React.FC = () => {
                         </a>
                       </p>
                       <a
-                        href="https://wa.me/96892882417"
+                        href={whatsappHref}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center mt-2 text-sm font-semibold text-green-700 hover:text-green-800 transition-colors"
+                        aria-label="Chat with us on WhatsApp"
+                        className="inline-flex items-center mt-3 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-all transform hover:scale-105 shadow-sm hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2"
                       >
-                        <MessageSquare className="w-4 h-4 mr-1.5" />
+                        <MessageCircle className="w-4 h-4 mr-2" />
                         Chat on WhatsApp
                       </a>
                     </div>

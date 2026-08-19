@@ -54,6 +54,98 @@ const THEME_CSS = String.raw`
     background-color: rgb(17 24 39 / 0.95);
   }
 
+  /* ---- The theme switch -------------------------------------------------
+     Styled here rather than with utility classes so the generic overrides
+     further down cannot repaint the track or the knob. The knob position is
+     driven by the 'dark' class on <html>, which is the switch state, so the
+     component never has to juggle transform classes itself. */
+  .bbs-switch {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    width: 3.25rem;
+    height: 1.75rem;
+    padding: 0;
+    border: 1px solid #e5e7eb;
+    border-radius: 9999px;
+    background-color: #f3f4f6;
+    cursor: pointer;
+    transition: background-color 200ms ease, border-color 200ms ease;
+  }
+
+  .bbs-switch:hover {
+    border-color: #2563eb;
+  }
+
+  .bbs-switch:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+  }
+
+  .dark .bbs-switch {
+    background-color: #374151;
+    border-color: #4b5563;
+  }
+
+  .dark .bbs-switch:hover {
+    border-color: #60a5fa;
+  }
+
+  .bbs-switch-icon {
+    position: absolute;
+    width: 0.875rem;
+    height: 0.875rem;
+    transition: opacity 200ms ease, color 200ms ease;
+  }
+
+  /* Only the icon on the far side of the knob shows - it is the theme you get
+     if you click. The other one would sit underneath the knob, so it fades. */
+  .bbs-switch-icon--sun {
+    left: 0.375rem;
+    color: #fbbf24;
+    opacity: 0;
+  }
+
+  .bbs-switch-icon--moon {
+    right: 0.375rem;
+    color: #64748b;
+    opacity: 1;
+  }
+
+  .dark .bbs-switch-icon--sun {
+    opacity: 1;
+  }
+
+  .dark .bbs-switch-icon--moon {
+    opacity: 0;
+  }
+
+  .bbs-switch-knob {
+    position: relative;
+    z-index: 1;
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-left: 0.1875rem;
+    border-radius: 9999px;
+    background-color: #ffffff;
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+    transition: transform 200ms ease;
+  }
+
+  .dark .bbs-switch-knob {
+    transform: translateX(1.5rem);
+    background-color: #f9fafb;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bbs-switch,
+    .bbs-switch-icon,
+    .bbs-switch-knob {
+      transition: none;
+    }
+  }
+
   /* The hero headline is clipped gradient text built on 'from-white-600',
      which is not a real Tailwind class - it only ever looked white because it
      inherited the section's gradient variables, so it would follow the section
@@ -412,17 +504,19 @@ const ThemeToggle: React.FC<{ className?: string }> = ({ className = '' }) => {
   return (
     <button
       type="button"
+      role="switch"
+      aria-checked={isDark}
       onClick={toggleTheme}
       title={label}
       aria-label={label}
-      aria-pressed={isDark}
-      className={`p-2 rounded-lg border border-gray-200 text-gray-700 hover:text-blue-600 hover:border-blue-600 transition-colors ${className}`}
+      className={`bbs-switch ${className}`}
     >
-      {isDark ? (
-        <Sun className="w-5 h-5" aria-hidden="true" />
-      ) : (
-        <Moon className="w-5 h-5" aria-hidden="true" />
-      )}
+      <Sun className="bbs-switch-icon bbs-switch-icon--sun" aria-hidden="true" />
+      <Moon
+        className="bbs-switch-icon bbs-switch-icon--moon"
+        aria-hidden="true"
+      />
+      <span className="bbs-switch-knob" />
     </button>
   );
 };

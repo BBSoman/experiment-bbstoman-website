@@ -1,5 +1,16 @@
-import React, { useCallback, useState, useSyncExternalStore } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
+import {
+  Link,
+  useLocation,
+  useNavigate,
+  useNavigationType,
+} from 'react-router-dom';
 import { Menu, Moon, Sun, X } from 'lucide-react';
 
 /* ==========================================================================
@@ -204,11 +215,9 @@ const THEME_CSS = String.raw`
     background-color: #f1f5f9;
   }
 
-  /* Partner and brand logos are artwork drawn for a white background - several
-     are black or dark navy and vanish on a dark card - so the plate they sit on
-     keeps its light surface. The first rule catches the bare logo plates on the
-     products page; the second catches the partner card header, identified by
-     its tint overlay. */
+  /* Brand logos are artwork drawn for a white background - several are black or
+     dark navy and would vanish on a dark card - so the plates they sit on on
+     the products page keep their light surface. */
   .dark .bg-white:has(> img:only-child),
   .dark .bg-white.rounded-xl.px-6.py-5,
   .dark .bg-white.rounded-xl.px-4.py-3 {
@@ -229,16 +238,13 @@ const THEME_CSS = String.raw`
     padding: 1px;
   }
 
-  .dark .bg-white:has(> .bg-gray-100\/10) {
+  /* The partner cards follow the theme like every other card, so only the logo
+     itself keeps a light plate - the panel around it goes dark. */
+  .dark .bg-white:has(> .bg-gray-100\/10) img {
+    box-sizing: content-box;
     background-color: #ffffff;
-  }
-
-  .dark .bg-white:has(> .bg-gray-100\/10) .text-gray-900 {
-    color: #111827;
-  }
-
-  .dark .bg-white:has(> .bg-gray-100\/10) .text-gray-700 {
-    color: #374151;
+    border-radius: 0.5rem;
+    padding: 0.375rem 0.5rem;
   }
 
   /* Drop shadows disappear against dark surfaces, so cards get a hairline
@@ -521,9 +527,38 @@ const ThemeToggle: React.FC<{ className?: string }> = ({ className = '' }) => {
   );
 };
 
+/**
+ * React Router keeps the window scroll position across route changes, so
+ * following a link from the footer of one page drops you at the bottom of the
+ * next one. The header renders on every page, which makes it the one place to
+ * fix this for the whole site.
+ *
+ * Deliberately keyed on the pathname only: the products page keeps its filters
+ * in the query string, and those changes manage their own scrolling.
+ */
+const useScrollToTopOnNavigate = () => {
+  const { pathname, hash } = useLocation();
+  const navigationType = useNavigationType();
+
+  // Read through a ref so these two are not effect dependencies: replacing the
+  // query string (which is how the products filters work) changes the
+  // navigation type, and that must not count as a page change.
+  const latest = useRef({ hash, navigationType });
+  latest.current = { hash, navigationType };
+
+  useEffect(() => {
+    // Back and forward should keep the position the browser restored, and an
+    // anchor link should be allowed to land on its target.
+    if (latest.current.navigationType === 'POP' || latest.current.hash) return;
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [pathname]);
+};
+
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
+
+  useScrollToTopOnNavigate();
 
   const handleGetStarted = () => {
     navigate('/contact');

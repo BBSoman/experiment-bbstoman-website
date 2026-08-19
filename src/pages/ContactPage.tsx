@@ -49,6 +49,14 @@ const buildPrefilledMessage = (
  * wants digits only - no leading "+", spaces or national trunk zero. Used for
  * both the WhatsApp link and the click-to-call link so the two cannot drift.
  */
+/**
+ * Where submitted enquiries land. EmailJS only honours this if the template's
+ * "To" field in the EmailJS dashboard is set to {{to_email}} - if that field
+ * has a hard-coded address instead, this value is ignored and the mail keeps
+ * going wherever the template says.
+ */
+const FORM_RECIPIENT = 'support@bbst.ai';
+
 const COUNTRY_CODE = '968';
 const NATIONAL_NUMBER = '92882417';
 const PHONE_DIGITS = `${COUNTRY_CODE}${NATIONAL_NUMBER}`;
@@ -136,7 +144,7 @@ const ContactPage: React.FC = () => {
         phone: formData.phone,
         service: formData.service,
         message: formData.message,
-        to_email: 'chitra@bbst.ai',
+        to_email: FORM_RECIPIENT,
       };
 
       // Send email using EmailJS

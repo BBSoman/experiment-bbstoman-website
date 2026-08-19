@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ChevronRight,
   ChevronDown,
@@ -589,6 +589,15 @@ const ProductsPage: React.FC = () => {
     );
   };
 
+  /** Top of the content area, just below the hero band. */
+  const CONTENT_TOP = 320;
+
+  const scrollToContent = () => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: CONTENT_TOP, behavior: 'smooth' });
+    }
+  };
+
   const selectedCategory = searchParams.get('category') || '';
   const selectedPartner = searchParams.get('brand') || '';
   const selectedProduct = searchParams.get('product') || '';
@@ -645,6 +654,33 @@ const ProductsPage: React.FC = () => {
       bright: '',
       panel: '',
     });
+
+  /**
+   * Changing a filter swaps the main panel for the results view, which is
+   * usually far shorter than the brand catalogue it replaces. The document
+   * collapses under the reader, the browser clamps their scroll position to
+   * the new maximum, and they end up staring at the footer. Every other way of
+   * changing the view already resets the scroll; filters were the exception.
+   *
+   * This runs after the browser has laid the new panel out - doing it inside
+   * the click handler races with scroll anchoring - and only pulls the reader
+   * up if they are still below the content, so ticking several boxes in a row
+   * from the top of the page does not jump about.
+   */
+  const filterSignature = `${searchQuery}|${FACET_GROUPS.map(
+    (group) => activeFacets[group.key].join(',')
+  ).join(';')}`;
+  const isFirstFilterRender = useRef(true);
+
+  useEffect(() => {
+    if (isFirstFilterRender.current) {
+      // Don't hijack the scroll of someone who arrived on a filtered link.
+      isFirstFilterRender.current = false;
+      return;
+    }
+    if (window.scrollY > CONTENT_TOP) scrollToContent();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterSignature]);
 
   // BOE BKY-A Product Versions based on the specifications
   const bkyAVersions: ProductVersion[] = [
@@ -6061,12 +6097,6 @@ const ProductsPage: React.FC = () => {
       ],
     },
   ];
-
-  const scrollToContent = () => {
-    if (typeof window !== 'undefined') {
-      window.scrollTo({ top: 320, behavior: 'smooth' });
-    }
-  };
 
   const handleCategorySelect = (categoryId: string) => {
     setExpandedCategory(categoryId);

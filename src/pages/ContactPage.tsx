@@ -44,8 +44,15 @@ const buildPrefilledMessage = (
   return '';
 };
 
-/** Oman country code + the number shown on this page, digits only. */
-const WHATSAPP_NUMBER = '96892882417';
+/**
+ * Oman country code (968) followed by the 8-digit number (92882417), digits
+ * only - wa.me rejects a leading "+", spaces or a national trunk zero. Used for
+ * both the WhatsApp link and the click-to-call link so the two cannot drift.
+ */
+const COUNTRY_CODE = '968';
+const NATIONAL_NUMBER = '92882417';
+const PHONE_DIGITS = `${COUNTRY_CODE}${NATIONAL_NUMBER}`;
+const PHONE_DISPLAY = `+${COUNTRY_CODE} ${NATIONAL_NUMBER}`;
 
 const INTENT_TO_SERVICE: Record<string, string> = {
   quote: 'sales',
@@ -81,7 +88,7 @@ const ContactPage: React.FC = () => {
    * with, so someone who arrived from a product page does not have to explain
    * what they were looking at.
    */
-  const whatsappHref = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
+  const whatsappHref = `https://wa.me/${PHONE_DIGITS}?text=${encodeURIComponent(
     buildPrefilledMessage(prefillBrand, prefillProduct, prefillIntent) ||
       'Hello Bright Business Services, I would like to know more about your solutions.'
   )}`;
@@ -250,10 +257,10 @@ const ContactPage: React.FC = () => {
                       </h4>
                       <p className="text-gray-600">
                         <a
-                          href="tel:+96892882417"
+                          href={`tel:+${PHONE_DIGITS}`}
                           className="hover:text-purple-600 hover:underline transition-colors"
                         >
-                          +968 92882417
+                          {PHONE_DISPLAY}
                         </a>
                       </p>
                       <a

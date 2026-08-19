@@ -23,8 +23,11 @@ const CONTACT_PHONE_DIAL = '+96892882417';
  * that some DNS resolvers fail to resolve at all, which shows the visitor a
  * browser error page instead of WhatsApp.
  *
- * Sits bottom-right so it does not collide with the support chat widget in the
- * bottom-left corner; swap `right-6` for `left-6` if that ever moves.
+ * Stacked directly above the Microsoft support chat bubble, which is fixed at
+ * right: 25px / bottom: 10px and is 58px square (so its top edge is 68px from
+ * the bottom of the viewport). bottom-24 puts this button at 96px, leaving a
+ * 28px gap, and right-6 lines the two up on the same vertical axis. If that
+ * widget is ever moved or removed, this is the offset to revisit.
  */
 const WHATSAPP_DIGITS = '96892882417';
 const WHATSAPP_GREETING =
@@ -40,7 +43,7 @@ const WhatsAppFloatingButton: React.FC = () => (
     rel="noopener noreferrer"
     aria-label="Chat with us on WhatsApp"
     title="Chat with us on WhatsApp"
-    className="group fixed bottom-6 right-6 z-40 flex items-center gap-0 rounded-full bg-[#25D366] text-white shadow-lg hover:shadow-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#25D366] transition-all duration-300 h-14 pl-[0.9375rem] pr-[0.9375rem] hover:pr-6 hover:gap-2"
+    className="group fixed bottom-24 right-6 z-40 flex items-center gap-0 rounded-full bg-[#25D366] text-white shadow-lg hover:shadow-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#25D366] transition-all duration-300 h-14 pl-[0.9375rem] pr-[0.9375rem] hover:pr-6 hover:gap-2"
   >
     {/* The WhatsApp mark, since lucide has no brand glyph for it. */}
     <svg

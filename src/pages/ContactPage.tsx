@@ -251,7 +251,7 @@ const ContactPage: React.FC = () => {
                         Email
                       </h4>
                       <p className="text-gray-600">
-                        {['media@bbst.ai', 'support@bbst.ai', 'sales@bbst.ai'].map(
+                        {['media@bbst.ai', 'support@bbst.ai', 'chitra@bbst.ai'].map(
                           (address, index) => (
                             <React.Fragment key={address}>
                               {index > 0 && ' / '}
@@ -288,7 +288,6 @@ const ContactPage: React.FC = () => {
                         href={whatsappHref}
                         target="_blank"
                         rel="noopener noreferrer"
-                        aria-label="Chat with us on WhatsApp"
                         className="inline-flex items-center mt-3 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-all transform hover:scale-105 shadow-sm hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2"
                       >
                         <MessageCircle className="w-4 h-4 mr-2" />

@@ -82,7 +82,7 @@ interface Partner {
   color: string;
 }
 
-interface CategoryBrand {
+export interface CategoryBrand {
   name: string;
   logo?: string;
   /** Matches a `partners[].id` below — brand has a product catalogue on this page. */
@@ -91,7 +91,7 @@ interface CategoryBrand {
   route?: string;
 }
 
-interface Category {
+export interface Category {
   id: string;
   name: string;
   description: string;
@@ -135,7 +135,7 @@ const PARTNER_SOLUTION_ROUTES: Record<string, string> = {
   'Nuera Commuincations': '/Nuera-solutions',
 };
 
-const CATEGORIES: Category[] = [
+export const CATEGORIES: Category[] = [
   {
     id: 'display-projection',
     name: 'Screens, LED Walls & Digital Signage',
@@ -335,7 +335,7 @@ const ASSET_FALLBACKS: Record<string, string> = {
 const assetUrl = (file: string) =>
   `/${encodeURIComponent(ASSET_FALLBACKS[file] || file)}`;
 
-const SafeImage: React.FC<{
+export const SafeImage: React.FC<{
   src?: string;
   alt: string;
   className?: string;

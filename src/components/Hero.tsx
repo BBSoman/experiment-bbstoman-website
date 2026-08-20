@@ -22,15 +22,26 @@ import {
 --------------------------------------------------------------------------- */
 
 /**
- * Background slides — only real photography from /public, no product shots or
- * anything with baked-in text. Adding another is one line here.
+ * Background slides. `bg` is any CSS background-image value, so a slide can be
+ * a photograph or pure gradient — the crossfade treats them identically.
  * `soft: true` applies a light blur, which hides the upscaling on the smaller
  * source files and reads as intentional depth of field behind the headline.
  */
-const SLIDES: Array<{ src: string; soft?: boolean }> = [
-  { src: "/vr.jpg.jpg" }, // 1200x800, sharp enough at full width
-  { src: "/av.jpg", soft: true }, // 600x400
-  { src: "/ai.jpg", soft: true }, // 600x316
+const SLIDES: Array<{ id: string; bg: string; soft?: boolean }> = [
+  {
+    // No photograph on this slide by design. It used to be 'vr.jpg.jpg', a
+    // two-portrait composite; the people competed with the headline and the
+    // globe, so the gradient carries it instead.
+    id: "gradient",
+    bg: [
+      "radial-gradient(90% 80% at 78% 42%, rgba(59,130,246,0.42), transparent 62%)",
+      "radial-gradient(70% 70% at 12% 78%, rgba(139,92,246,0.34), transparent 65%)",
+      "radial-gradient(50% 60% at 50% 0%, rgba(56,189,248,0.20), transparent 70%)",
+      "linear-gradient(135deg, #0b1220 0%, #172554 48%, #1e1b4b 100%)",
+    ].join(", "),
+  },
+  { id: "av", bg: 'url("/av.jpg")', soft: true }, // 600x400
+  { id: "ai", bg: 'url("/ai.jpg")', soft: true }, // 600x316
 ];
 
 /** Faint drifting glyphs, scattered across the hero. */
@@ -234,11 +245,11 @@ const Hero: React.FC = () => {
       <div className="absolute inset-0 z-0">
         {SLIDES.map((slide, i) => (
           <div
-            key={slide.src}
+            key={slide.id}
             className={`bbs-hero-slide bbs-hero-slide--${i + 1}${
               slide.soft ? " bbs-hero-slide--soft" : ""
             }`}
-            style={{ backgroundImage: `url("${slide.src}")` }}
+            style={{ backgroundImage: slide.bg }}
             role="presentation"
           />
         ))}

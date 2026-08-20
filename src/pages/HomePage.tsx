@@ -1,11 +1,11 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Handshake } from 'lucide-react';
-import Header from '../components/Header';
-import Hero from '../components/Hero';
-import Services from '../components/Services';
-import BrandPartners from '../components/BrandPartners';
-import Footer from '../components/Footer';
+import React from "react";
+import { Link } from "react-router-dom";
+import { Handshake } from "lucide-react";
+import Header from "../components/Header";
+import Hero from "../components/Hero";
+import Services from "../components/Services";
+import BrandPartners from "../components/BrandPartners";
+import Footer from "../components/Footer";
 
 /* ---------------------------------------------------------------------------
    Partner logo marquee
@@ -23,30 +23,58 @@ type Brand = {
 
 /** Logo file names are all present in /public; routes are all in App.tsx. */
 const BRANDS: Brand[] = [
-  { name: 'HTC VIVE', logo: '/vive1.png', route: '/htc-solutions' },
-  { name: 'BOE', logo: '/boe1.png', route: '/boe-solutions' },
-  { name: 'V View', logo: '/vview.png', route: '/vview-solutions' },
-  { name: 'Ashton Bentley', logo: '/ashton.png', route: '/Ashton-bentley-solutions' },
-  { name: 'ZeeVee', logo: '/zeevee1.png', route: '/Zeevee-solutions' },
-  { name: 'Mago', logo: '/mago2.png', route: '/mago-solutions' },
-  { name: 'Nearity', logo: '/nearity1.png', route: '/nearity-solutions' },
-  { name: 'Nearstream', logo: '/nearstream1.png', route: '/nearstream-solutions' },
-  { name: 'Viverse', logo: '/viverse1.png', route: '/Viverse-solutions' },
-  { name: 'Vizzio', logo: '/vizzio copy.png', route: '/vizzio-solutions' },
-  { name: 'Polytron', logo: '/polytron copy.png', route: '/polytron-solutions' },
-  { name: 'Telepresenz', logo: '/tele.png.png', route: '/tele-presenz-solutions' },
-  { name: 'Robro Systems', logo: '/roboro.png', route: '/robro-systems-solutions' },
-  { name: 'Napster', logo: '/napster1.png', route: '/napster-solutions' },
-  { name: 'XRAI', logo: '/xrai1.png', route: '/xrai-solutions' },
-  { name: 'DeepQ', logo: '/deepqai.png', route: '/deepq-solutions' },
-  { name: 'AI-LA', logo: '/ai-la.png', route: '/aila-solutions' },
-  { name: 'Disruptive Technologies', logo: '/disruptx1.png', route: '/disruptive-technologies-solutions' },
-  { name: 'Nanoprecise', logo: '/nano.png', route: '/nano-precise-solutions' },
-  { name: 'Property Automate', logo: '/automate1.png', route: '/property-automate-solutions' },
-  { name: 'Weblib', logo: '/weblib1.png', route: '/weblib-solutions' },
-  { name: 'G-Reigns', logo: '/g reigns1.png', route: '/reigns-solutions' },
-  { name: 'GoNitro', logo: '/nitro1.png', route: '/go-nitro-solutions' },
-  { name: 'Nuera', logo: '/Untitled-3 copy.png', route: '/Nuera-solutions' },
+  { name: "HTC VIVE", logo: "/vive1.png", route: "/htc-solutions" },
+  { name: "BOE", logo: "/boe1.png", route: "/boe-solutions" },
+  { name: "V View", logo: "/vview.png", route: "/vview-solutions" },
+  {
+    name: "Ashton Bentley",
+    logo: "/ashton.png",
+    route: "/Ashton-bentley-solutions",
+  },
+  { name: "ZeeVee", logo: "/zeevee1.png", route: "/Zeevee-solutions" },
+  { name: "Mago", logo: "/mago2.png", route: "/mago-solutions" },
+  { name: "Nearity", logo: "/nearity1.png", route: "/nearity-solutions" },
+  {
+    name: "Nearstream",
+    logo: "/nearstream1.png",
+    route: "/nearstream-solutions",
+  },
+  { name: "Viverse", logo: "/viverse1.png", route: "/Viverse-solutions" },
+  { name: "Vizzio", logo: "/vizzio copy.png", route: "/vizzio-solutions" },
+  {
+    name: "Polytron",
+    logo: "/polytron copy.png",
+    route: "/polytron-solutions",
+  },
+  {
+    name: "Telepresenz",
+    logo: "/tele.png.png",
+    route: "/tele-presenz-solutions",
+  },
+  {
+    name: "Robro Systems",
+    logo: "/roboro.png",
+    route: "/robro-systems-solutions",
+  },
+  { name: "Napster", logo: "/napster1.png", route: "/napster-solutions" },
+  { name: "XRAI", logo: "/xrai1.png", route: "/xrai-solutions" },
+  { name: "DeepQ", logo: "/deepqai.png", route: "/deepq-solutions" },
+  { name: "AI-LA", logo: "/ai-la.png", route: "/aila-solutions" },
+  {
+    name: "Disruptive Technologies",
+    logo: "/disruptx1.png",
+    route: "/disruptive-technologies-solutions",
+  },
+  { name: "Nanoprecise", logo: "/nano.png", route: "/nano-precise-solutions" },
+  {
+    name: "Property Automate",
+    logo: "/automate1.png",
+    route: "/property-automate-solutions",
+  },
+  { name: "Weblib", logo: "/weblib1.png", route: "/weblib-solutions" },
+  { name: "G-Reigns", logo: "/g reigns1.png", route: "/reigns-solutions" },
+  { name: "GoNitro", logo: "/nitro1.png", route: "/go-nitro-solutions" },
+  { name: "Nuera", logo: "/Untitled-3 copy.png", route: "/Nuera-solutions" },
 ];
 
 /**
@@ -54,6 +82,46 @@ const BRANDS: Brand[] = [
  * an identical frame and the loop looks endless.
  */
 const MARQUEE_CSS = `
+/* ---------------------------------------------------------------------------
+   Theming
+   The theme switch in Header.tsx works by remapping the specific light-mode
+   Tailwind utilities the site uses whenever <html> carries the 'dark' class.
+   'from-white', 'via-blue-50/40' and 'to-white' are not on that list, so a
+   Tailwind gradient here would have stayed white in dark mode. Owning the
+   band as its own class instead keeps the strip in step with the theme, and
+   these rules travel with the component.
+--------------------------------------------------------------------------- */
+.bbs-marquee-band {
+  background-image: linear-gradient(
+    to bottom,
+    #ffffff,
+    rgba(239, 246, 255, 0.4),
+    #ffffff
+  );
+}
+.dark .bbs-marquee-band {
+  /* Same palette variables the theme switch defines on '.dark'. */
+  background-image: linear-gradient(
+    to bottom,
+    var(--bbs-surface, #111827),
+    var(--bbs-surface-mid, #18202f),
+    var(--bbs-surface, #111827)
+  );
+}
+
+/* The logo plates stay white in dark mode on purpose: several partner logos
+   are black or dark navy artwork on transparency and would vanish on a dark
+   tile. Header.tsx already does this for logo plates elsewhere on the site via
+   ':has(> img:only-child)' — this states it outright so the strip does not
+   depend on ':has()' support. */
+.dark .bbs-marquee-plate {
+  background-color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.16);
+}
+.dark .bbs-marquee-plate:hover {
+  border-color: rgba(147, 197, 253, 0.65);
+}
+
 .bbs-marquee {
   position: relative;
   overflow: hidden;
@@ -101,7 +169,7 @@ const LogoCard: React.FC<{ brand: Brand; duplicate?: boolean }> = ({
     aria-hidden={duplicate}
     tabIndex={duplicate ? -1 : undefined}
     title={brand.name}
-    className="group mx-3 flex h-24 w-44 shrink-0 items-center justify-center rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl sm:mx-4 sm:h-28 sm:w-52"
+    className="bbs-marquee-plate group mx-3 flex h-24 w-44 shrink-0 items-center justify-center rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl sm:mx-4 sm:h-28 sm:w-52"
   >
     <img
       src={brand.logo}
@@ -114,10 +182,10 @@ const LogoCard: React.FC<{ brand: Brand; duplicate?: boolean }> = ({
       onError={(e) => {
         // Keep the strip tidy if a logo file is ever renamed or removed.
         const el = e.currentTarget;
-        el.style.display = 'none';
+        el.style.display = "none";
         el.parentElement?.insertAdjacentHTML(
-          'afterbegin',
-          `<span class="text-sm font-semibold text-gray-500">${brand.name}</span>`
+          "afterbegin",
+          `<span class="text-sm font-semibold text-gray-500">${brand.name}</span>`,
         );
       }}
     />
@@ -132,7 +200,7 @@ const PartnerMarquee: React.FC = () => {
   return (
     <section
       id="brands"
-      className="relative overflow-hidden bg-gradient-to-b from-white via-blue-50/40 to-white py-16 sm:py-20"
+      className="bbs-marquee-band relative overflow-hidden py-16 sm:py-20"
     >
       <style dangerouslySetInnerHTML={{ __html: MARQUEE_CSS }} />
 
@@ -142,7 +210,7 @@ const PartnerMarquee: React.FC = () => {
           Trusted Technology Partners
         </div>
         <h2 className="mb-3 text-3xl font-bold text-gray-900 md:text-4xl">
-          Powered by the{' '}
+          Powered by the{" "}
           <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             world&apos;s best brands
           </span>

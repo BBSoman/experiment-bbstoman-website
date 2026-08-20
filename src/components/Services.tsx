@@ -1,15 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import {
-  ArrowRight,
-  BrainCircuit,
-  GlassesIcon,
-  Lightbulb,
-  Monitor,
-  Network,
-  Presentation,
-  Radio,
-} from "lucide-react";
+import { ArrowRight, Lightbulb } from "lucide-react";
 
 /* ---------------------------------------------------------------------------
    Our Expertise
@@ -21,7 +12,6 @@ import {
 --------------------------------------------------------------------------- */
 
 type Service = {
-  icon: React.ElementType;
   title: string;
   categoryId: string;
   description: string;
@@ -40,7 +30,6 @@ type Service = {
 
 const SERVICES: Service[] = [
   {
-    icon: Monitor,
     title: "Screens, LED Walls & Digital Signage",
     categoryId: "display-projection",
     description:
@@ -58,7 +47,6 @@ const SERVICES: Service[] = [
     fit: "cover",
   },
   {
-    icon: Presentation,
     title: "Meeting Room & AV Systems",
     categoryId: "professional-av",
     description:
@@ -75,7 +63,6 @@ const SERVICES: Service[] = [
     fit: "cover",
   },
   {
-    icon: BrainCircuit,
     title: "AI & Video Analytics",
     categoryId: "enterprise-ai",
     description:
@@ -91,7 +78,6 @@ const SERVICES: Service[] = [
     fit: "cover",
   },
   {
-    icon: GlassesIcon,
     title: "VR, AR & Immersive",
     categoryId: "immersive-xr",
     description:
@@ -108,7 +94,6 @@ const SERVICES: Service[] = [
     fit: "cover",
   },
   {
-    icon: Radio,
     title: "Smart Buildings & IoT Sensors",
     categoryId: "smart-spaces-iot",
     description:
@@ -124,7 +109,6 @@ const SERVICES: Service[] = [
     fit: "cover",
   },
   {
-    icon: Network,
     title: "Networking, Wi-Fi & Private 5G",
     categoryId: "networking",
     description:
@@ -201,12 +185,7 @@ const Services: React.FC = () => {
                   }`}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                <div className="absolute bottom-3 left-3 right-3 flex items-center">
-                  <div
-                    className={`w-12 h-12 shrink-0 bg-gradient-to-r ${service.gradient} rounded-xl flex items-center justify-center mr-3`}
-                  >
-                    <service.icon className="w-6 h-6 text-white" />
-                  </div>
+                <div className="absolute bottom-3 left-3 right-3">
                   <h3 className="text-lg font-bold text-white drop-shadow-md">
                     {service.title}
                   </h3>

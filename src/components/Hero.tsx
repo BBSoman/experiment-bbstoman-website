@@ -9,6 +9,8 @@ import {
   Boxes,
   Radio,
   Waves,
+  MonitorPlay,
+  ShieldCheck,
 } from "lucide-react";
 
 /* ---------------------------------------------------------------------------
@@ -40,40 +42,24 @@ const GLYPHS = [
   { Icon: Waves, className: "top-[8%] right-[32%] h-12 w-12", delay: "-12s" },
 ];
 
-/** The four capability cards. Tilt lives on a wrapper; see the JSX below. */
-const FEATURES = [
-  {
-    Icon: Brain,
-    title: "AI Automation",
-    body: "Intelligent automation and machine learning.",
-    iconBg: "bg-blue-100",
-    iconColor: "text-blue-600",
-    tilt: "rotate-3",
-  },
-  {
-    Icon: Eye,
-    title: "Immersive Tech",
-    body: "Immersive experiences and virtual environments.",
-    iconBg: "bg-purple-100",
-    iconColor: "text-purple-600",
-    tilt: "-rotate-3 mt-8",
-  },
-  {
-    Icon: Sparkles,
-    title: "ProAV/UCC",
-    body: "seamless communication, presentation, and collaboration in business environments.",
-    iconBg: "bg-green-100",
-    iconColor: "text-green-600",
-    tilt: "rotate-2 -mt-4",
-  },
-  {
-    Icon: ArrowRight,
-    title: "IIOT",
-    body: "data collection, monitoring, and automation for improved efficiency and decision-making.",
-    iconBg: "bg-orange-100",
-    iconColor: "text-orange-600",
-    tilt: "-rotate-2",
-  },
+/**
+ * Icons that orbit the globe. No labels by design — each still carries a
+ * title/aria-label so the meaning is available to screen readers and on hover.
+ * `a` is the starting angle in degrees, `r` the orbit radius as a CSS length.
+ */
+const ORBIT_OUTER = [
+  { Icon: Brain, label: "AI & machine learning", a: 0 },
+  { Icon: Eye, label: "AR / VR & immersive tech", a: 60 },
+  { Icon: MonitorPlay, label: "ProAV & collaboration", a: 120 },
+  { Icon: Cpu, label: "Industrial IoT", a: 180 },
+  { Icon: Radio, label: "Connectivity & networks", a: 240 },
+  { Icon: ShieldCheck, label: "Secure deployment", a: 300 },
+];
+
+const ORBIT_INNER = [
+  { Icon: Boxes, label: "Smart spaces", a: 30 },
+  { Icon: Waves, label: "Sensing & analytics", a: 150 },
+  { Icon: Sparkles, label: "Innovation services", a: 270 },
 ];
 
 /**
@@ -119,12 +105,110 @@ const HERO_CSS = `
   50%      { transform: translate3d(14px, -26px, 0) rotate(2deg); }
 }
 
-/* Feature cards settle into their tilt, then breathe. */
-.bbs-hero-card { animation: bbs-hero-float 7s ease-in-out infinite; }
-.bbs-hero-card--1 { animation-delay: 0s; }
-.bbs-hero-card--2 { animation-delay: -1.75s; }
-.bbs-hero-card--3 { animation-delay: -3.5s; }
-.bbs-hero-card--4 { animation-delay: -5.25s; }
+/* --- Globe + orbits ---------------------------------------------------- */
+.bbs-globe-stage {
+  /* Both orbits must clear the sphere: orbit radius - half a badge > globe/2.
+     Outer badges are 56px, inner badges 44px. */
+  --globe: 230px;
+  --orbit-inner: 170px;
+  --orbit-outer: 230px;
+  position: relative;
+  width: calc(var(--orbit-outer) * 2 + 64px);
+  height: calc(var(--orbit-outer) * 2 + 64px);
+  max-width: 100%;
+}
+@media (max-width: 1279px) {
+  .bbs-globe-stage { --globe: 200px; --orbit-inner: 150px; --orbit-outer: 202px; }
+}
+@media (max-width: 1023px) {
+  .bbs-globe-stage { --globe: 210px; --orbit-inner: 156px; --orbit-outer: 210px; }
+}
+@media (max-width: 420px) {
+  .bbs-globe-stage { --globe: 140px; --orbit-inner: 112px; --orbit-outer: 150px; }
+}
+
+.bbs-globe {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--globe);
+  height: var(--globe);
+  margin: calc(var(--globe) / -2) 0 0 calc(var(--globe) / -2);
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow:
+    inset 0 0 60px rgba(30, 64, 175, 0.55),
+    inset -18px -12px 50px rgba(0, 0, 0, 0.55),
+    0 0 70px rgba(59, 130, 246, 0.35);
+  background:
+    radial-gradient(circle at 32% 28%, rgba(147, 197, 253, 0.55), transparent 55%),
+    radial-gradient(circle at 50% 50%, #1e40af 0%, #0f172a 78%);
+}
+
+/* Meridian grid: a repeating gradient that scrolls sideways, so the sphere
+   reads as spinning without needing a texture file. */
+.bbs-globe__grid {
+  position: absolute;
+  inset: -10%;
+  opacity: 0.55;
+  background-image:
+    repeating-linear-gradient(to right, rgba(191, 219, 254, 0.45) 0 1px, transparent 1px 34px),
+    repeating-linear-gradient(to bottom, rgba(191, 219, 254, 0.3) 0 1px, transparent 1px 30px);
+  animation: bbs-globe-spin 14s linear infinite;
+}
+@keyframes bbs-globe-spin {
+  from { background-position: 0 0, 0 0; }
+  to   { background-position: -34px 0, 0 0; }
+}
+
+/* Latitude arcs, drawn on top to sell the curvature. */
+.bbs-globe__arcs { position: absolute; inset: 0; }
+
+/* Specular highlight. */
+.bbs-globe__gloss {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.35), transparent 42%);
+}
+
+.bbs-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-radius: 50%;
+  border: 1px dashed rgba(191, 219, 254, 0.22);
+  transform: translate(-50%, -50%);
+}
+.bbs-ring--outer { width: calc(var(--orbit-outer) * 2); height: calc(var(--orbit-outer) * 2); }
+.bbs-ring--inner { width: calc(var(--orbit-inner) * 2); height: calc(var(--orbit-inner) * 2); }
+
+.bbs-orbit { position: absolute; inset: 0; }
+.bbs-orbit--outer { animation: bbs-orbit-spin 44s linear infinite; }
+.bbs-orbit--inner { animation: bbs-orbit-spin 32s linear infinite reverse; }
+
+@keyframes bbs-orbit-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.bbs-orbit__node {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  /* Rotate out to the angle, push along the radius, then un-rotate so the
+     badge itself stays square to the page. */
+  transform: translate(-50%, -50%) rotate(var(--a)) translateX(var(--r))
+    rotate(calc(var(--a) * -1));
+}
+
+/* Cancels the parent ring's rotation so icons never appear upside down. */
+.bbs-orbit__keep-upright {
+  animation: bbs-orbit-spin 44s linear infinite reverse;
+}
+.bbs-orbit--inner .bbs-orbit__keep-upright {
+  animation: bbs-orbit-spin 32s linear infinite normal;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .bbs-hero-slide { animation: none; transform: none; }
@@ -132,7 +216,9 @@ const HERO_CSS = `
   .bbs-hero-slide--1 { opacity: 0.85; }
   .bbs-hero-float,
   .bbs-hero-drift,
-  .bbs-hero-card { animation: none; }
+  .bbs-globe__grid,
+  .bbs-orbit,
+  .bbs-orbit__keep-upright { animation: none; }
 }
 `;
 
@@ -230,29 +316,86 @@ const Hero: React.FC = () => {
             </div>
           </div>
 
-          {/* Feature cards — gently floating, tilt straightens on hover */}
-          <div className="mt-12 flex-1 lg:mt-0">
-            <div className="relative">
-              <div className="mx-auto grid max-w-md grid-cols-2 gap-6">
-                {FEATURES.map((f, i) => (
-                  <div
-                    key={f.title}
-                    /* Wrapper owns the tilt so the inner float animation
-                       cannot overwrite it. */
-                    className={`transform transition-transform duration-300 hover:rotate-0 ${f.tilt}`}
+          {/* Globe with orbiting capability icons — icons only, no labels */}
+          <div className="mt-14 flex flex-1 justify-center lg:mt-0">
+            <div className="bbs-globe-stage">
+              {/* Orbit guide rings */}
+              <div className="bbs-ring bbs-ring--outer" />
+              <div className="bbs-ring bbs-ring--inner" />
+
+              {/* The globe */}
+              <div className="bbs-globe">
+                <div className="bbs-globe__grid" />
+                <svg
+                  className="bbs-globe__arcs"
+                  viewBox="0 0 100 100"
+                  preserveAspectRatio="none"
+                  aria-hidden="true"
+                >
+                  <g
+                    fill="none"
+                    stroke="rgba(191,219,254,0.35)"
+                    strokeWidth="0.6"
                   >
-                    <div
-                      className={`bbs-hero-card bbs-hero-card--${i + 1} h-full rounded-2xl bg-white p-6 shadow-xl`}
-                    >
-                      <div
-                        className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl ${f.iconBg}`}
+                    <ellipse cx="50" cy="50" rx="49" ry="49" />
+                    <ellipse cx="50" cy="50" rx="49" ry="17" />
+                    <ellipse cx="50" cy="50" rx="49" ry="33" />
+                    <ellipse cx="50" cy="50" rx="17" ry="49" />
+                    <ellipse cx="50" cy="50" rx="33" ry="49" />
+                  </g>
+                </svg>
+                <div className="bbs-globe__gloss" />
+              </div>
+
+              {/* Outer orbit */}
+              <div className="bbs-orbit bbs-orbit--outer">
+                {ORBIT_OUTER.map(({ Icon, label, a }) => (
+                  <div
+                    key={label}
+                    className="bbs-orbit__node"
+                    style={
+                      {
+                        "--a": `${a}deg`,
+                        "--r": "var(--orbit-outer)",
+                      } as React.CSSProperties
+                    }
+                  >
+                    <div className="bbs-orbit__keep-upright">
+                      <span
+                        title={label}
+                        aria-label={label}
+                        role="img"
+                        className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/30 bg-slate-900/55 text-blue-50 shadow-lg ring-1 ring-inset ring-white/10 backdrop-blur-md transition-colors hover:border-blue-300/60 hover:bg-slate-900/80 hover:text-white"
                       >
-                        <f.Icon className={`h-6 w-6 ${f.iconColor}`} />
-                      </div>
-                      <h3 className="mb-2 font-semibold text-black">
-                        {f.title}
-                      </h3>
-                      <p className="text-sm text-gray-700">{f.body}</p>
+                        <Icon className="h-7 w-7" />
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Inner orbit, turning the other way */}
+              <div className="bbs-orbit bbs-orbit--inner">
+                {ORBIT_INNER.map(({ Icon, label, a }) => (
+                  <div
+                    key={label}
+                    className="bbs-orbit__node"
+                    style={
+                      {
+                        "--a": `${a}deg`,
+                        "--r": "var(--orbit-inner)",
+                      } as React.CSSProperties
+                    }
+                  >
+                    <div className="bbs-orbit__keep-upright">
+                      <span
+                        title={label}
+                        aria-label={label}
+                        role="img"
+                        className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/25 bg-slate-900/55 text-blue-50 shadow-md ring-1 ring-inset ring-white/10 backdrop-blur-md transition-colors hover:border-blue-300/60 hover:bg-slate-900/80 hover:text-white"
+                      >
+                        <Icon className="h-5 w-5" />
+                      </span>
                     </div>
                   </div>
                 ))}

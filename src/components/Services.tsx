@@ -1,82 +1,159 @@
-import React from 'react';
-import { Brain, Eye, Zap, Lightbulb, ComputerIcon, Video } from 'lucide-react';
+import React from "react";
+import { Link } from "react-router-dom";
+import {
+  ArrowRight,
+  BrainCircuit,
+  GlassesIcon,
+  Lightbulb,
+  Monitor,
+  Network,
+  Presentation,
+  Radio,
+} from "lucide-react";
+
+/* ---------------------------------------------------------------------------
+   Our Expertise
+   The six lines of business, mirroring the Products page so a visitor sees the
+   same names in both places. Each `categoryId` is a real id from CATEGORIES in
+   ProductsPage.tsx, and each card deep-links to that filtered category via
+   /products?category=<id>. Names, gradients and images are taken from the
+   matching category on purpose — one wording, one colour, one photo per line.
+--------------------------------------------------------------------------- */
+
+type Service = {
+  icon: React.ElementType;
+  title: string;
+  categoryId: string;
+  description: string;
+  features: string[];
+  gradient: string;
+  /** File in /public. */
+  image: string;
+  /**
+   * 'cover' for photographs that can fill the header.
+   * 'contain' for cut-out product art with a transparent background — those
+   * are centred on the card's own gradient instead, because stretching a
+   * cut-out edge-to-edge just shows empty space.
+   */
+  fit: "cover" | "contain";
+};
+
+const SERVICES: Service[] = [
+  {
+    icon: Monitor,
+    title: "Screens, LED Walls & Digital Signage",
+    categoryId: "display-projection",
+    description:
+      "Professional displays, LED video walls and digital signage — from panel-level manufacturing with BOE to complete visual installations, indoor and outdoor.",
+    features: [
+      "LED Video Walls",
+      "LED Poster Screens",
+      "Outdoor LED",
+      "Digital Signage",
+      "All-In-One Displays",
+    ],
+    gradient: "from-indigo-500 to-blue-600",
+    // BOE outdoor LED cabinets: unmistakably LED, and no baked-in text.
+    image: "outdoorseries.png",
+    fit: "cover",
+  },
+  {
+    icon: Presentation,
+    title: "Meeting Room & AV Systems",
+    categoryId: "professional-av",
+    description:
+      "End-to-end audio-visual systems for meeting rooms, auditoriums and control rooms — signal distribution, room kits and fully integrated environments.",
+    features: [
+      "Room Kits",
+      "AV over IP",
+      "Control Rooms",
+      "Auditoriums",
+      "Video Conferencing",
+    ],
+    gradient: "from-sky-500 to-cyan-600",
+    image: "av.jpg",
+    fit: "cover",
+  },
+  {
+    icon: BrainCircuit,
+    title: "AI & Video Analytics",
+    categoryId: "enterprise-ai",
+    description:
+      "Applied AI for the enterprise — language, diagnostics and decision support, plus camera-based intelligence for inspection, monitoring and analytics.",
+    features: [
+      "Machine Learning",
+      "Computer Vision",
+      "Predictive Analytics",
+      "Smart Cameras",
+    ],
+    gradient: "from-amber-500 to-orange-600",
+    image: "ai.jpg",
+    fit: "cover",
+  },
+  {
+    icon: GlassesIcon,
+    title: "VR, AR & Immersive",
+    categoryId: "immersive-xr",
+    description:
+      "Headsets, smart glasses and immersive platforms for training, remote assistance and enterprise extended reality — plus 3D digital twins and simulation.",
+    features: [
+      "Enterprise VR",
+      "Smart Glasses",
+      "Training Simulation",
+      "Remote Assistance",
+      "3D Digital Twins",
+    ],
+    gradient: "from-fuchsia-500 to-pink-600",
+    image: "vr.jpg.jpg",
+    fit: "cover",
+  },
+  {
+    icon: Radio,
+    title: "Smart Buildings & IoT Sensors",
+    categoryId: "smart-spaces-iot",
+    description:
+      "Wireless sensing, condition monitoring and connected-building infrastructure that makes physical spaces measurable — and machines predictable.",
+    features: [
+      "Wireless Sensors",
+      "Condition Monitoring",
+      "Predictive Maintenance",
+      "Real-Time Monitoring",
+    ],
+    gradient: "from-rose-500 to-red-600",
+    image: "workplacegoto.png",
+    fit: "cover",
+  },
+  {
+    icon: Network,
+    title: "Networking, Wi-Fi & Private 5G",
+    categoryId: "networking",
+    description:
+      "Wired and wireless network infrastructure, guest access and captive-portal platforms for demanding environments — the layer everything else runs on.",
+    features: ["Wi-Fi 6 / 6E", "Private 5G", "Guest Access", "Captive Portal"],
+    gradient: "from-cyan-500 to-blue-600",
+    /* Not 'advancednetwork.png': that file is a fully transparent line diagram
+       (0% opaque pixels), so it renders as a washed-out smudge on a card.
+       G-Reigns 'core' is a cut-out of real network hardware instead. */
+    image: "core.png",
+    fit: "contain",
+  },
+];
+
+/**
+ * The theme switch in Header.tsx remaps light utilities under '.dark'. There,
+ * a 'bg-white' section and a 'bg-white' card resolve to the same raised
+ * surface, which would make the cards vanish into the band — so the band gets
+ * its own class and sits one step darker than the cards it holds.
+ */
+const SERVICES_CSS = `
+.bbs-expertise-band { background-color: #ffffff; }
+.dark .bbs-expertise-band { background-color: var(--bbs-surface, #111827); }
+`;
 
 const Services: React.FC = () => {
-  const services = [
-    {
-      icon: Brain,
-      title: 'Artificial Intelligence',
-      description:
-        'Advanced AI solutions including machine learning, natural language processing, and predictive analytics to automate and optimize your business processes.',
-      features: [
-        'Machine Learning',
-        'Deep Learning',
-        'NLP',
-        'Predictive Analytics',
-      ],
-      gradient: 'from-blue-500 to-cyan-500',
-      image: 'ai.jpg',
-    },
-    {
-      icon: Eye,
-      title: 'Augmented Reality',
-      description:
-        'Immersive AR experiences that blend digital content with the real world, enhancing customer engagement and operational efficiency.',
-      features: [
-        'AR Apps',
-        'Training Simulations',
-        'Interactive Displays',
-        'Product Visualization',
-      ],
-      gradient: 'from-purple-500 to-pink-500',
-      image: '/women.png', // Must be in public/
-    },
-    {
-      icon: Zap,
-      title: 'Virtual Reality',
-      description:
-        'Cutting-edge VR solutions for training, visualization, and entertainment that transport users to entirely new digital environments.',
-      features: [
-        'VR Training',
-        'Virtual Showrooms',
-        'Immersive Experiences',
-        '3D Visualization',
-      ],
-      gradient: 'from-green-500 to-teal-500',
-      image: 'htcvr.png',
-    },
-    {
-      icon: ComputerIcon,
-      title: 'Industrial IoT',
-      description:
-        'Innovative IIoT solutions integrating smart sensors, data analytics, and real-time monitoring to enhance operational efficiency, safety, and productivity in industrial environments.',
-      features: [
-        'Smart Sensors',
-        'Edge Computing',
-        'Real-Time Monitoring',
-        'Predictive Maintenance',
-      ],
-      gradient: 'from-orange-500 to-red-500',
-      image: 'industry.jpg',
-    },
-     {
-  icon: Video,
-  title: 'Audio-Visual Solutions',
-  description:
-    'Cutting-edge AV solutions that blend sound and visual technologies to deliver immersive communication, impactful presentations, and engaging experiences for events, workplaces, and digital platforms.',
-  features: [
-    'High-Definition Video',
-    'Crystal-Clear Audio',
-    'Live Streaming',
-    'Interactive Displays',
-  ],
-  gradient: 'from-purple-500 to-indigo-500',
-  image: 'av.jpg',
-},
-  ];
-
   return (
-    <section id="services" className="py-20 bg-white">
+    <section id="services" className="bbs-expertise-band py-20">
+      <style dangerouslySetInnerHTML={{ __html: SERVICES_CSS }} />
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* header */}
         <div className="text-center mb-16">
@@ -85,62 +162,59 @@ const Services: React.FC = () => {
             Our Expertise
           </div>
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Technology Solutions That Drive{' '}
+            Technology Solutions That Drive{" "}
             <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               Innovation
             </span>
           </h2>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-            We specialize in three core areas of emerging technology, delivering
-            comprehensive solutions that transform how businesses operate and
-            engage with their customers.
+            From LED video walls and meeting rooms to AI, immersive technology,
+            connected buildings and the networks underneath — we design, supply
+            and support the technology that transforms how businesses operate.
           </p>
         </div>
 
         {/* cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {services.map((service, index) => (
-            <div
-              key={index}
-              className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 hover:border-transparent hover:-translate-y-2 overflow-hidden"
+          {SERVICES.map((service) => (
+            <Link
+              key={service.categoryId}
+              to={`/products?category=${service.categoryId}`}
+              className="group relative flex flex-col bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 hover:border-transparent hover:-translate-y-2 overflow-hidden"
             >
-              {/* Image background section */}
-              {service.image && (
-                <div className="relative h-40 w-full">
-                  <img
-                    src={service.image}
-                    alt={service.title}
-                    className="absolute inset-0 w-full h-full object-cover"
+              {/* Image header */}
+              <div className="relative h-40 w-full shrink-0 overflow-hidden">
+                {service.fit === "contain" && (
+                  <div
+                    className={`absolute inset-0 bg-gradient-to-br ${service.gradient}`}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                  <div className="absolute bottom-3 left-3 flex items-center">
-                    <div
-                      className={`w-12 h-12 bg-gradient-to-r ${service.gradient} rounded-xl flex items-center justify-center mr-3`}
-                    >
-                      <service.icon className="w-6 h-6 text-white" />
-                    </div>
-                    <h3 className="text-lg font-bold text-white drop-shadow-md">
-                      {service.title}
-                    </h3>
+                )}
+                <img
+                  src={`/${service.image}`}
+                  alt={service.title}
+                  loading="lazy"
+                  decoding="async"
+                  className={`absolute inset-0 h-full w-full transition-transform duration-500 group-hover:scale-105 ${
+                    service.fit === "cover"
+                      ? "object-cover"
+                      : "object-contain p-4"
+                  }`}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                <div className="absolute bottom-3 left-3 right-3 flex items-center">
+                  <div
+                    className={`w-12 h-12 shrink-0 bg-gradient-to-r ${service.gradient} rounded-xl flex items-center justify-center mr-3`}
+                  >
+                    <service.icon className="w-6 h-6 text-white" />
                   </div>
+                  <h3 className="text-lg font-bold text-white drop-shadow-md">
+                    {service.title}
+                  </h3>
                 </div>
-              )}
+              </div>
 
               {/* Content */}
-              <div className="p-6">
-                {!service.image && (
-                  <>
-                    <div
-                      className={`w-16 h-16 bg-gradient-to-r ${service.gradient} rounded-2xl flex items-center justify-center mb-6 transform group-hover:scale-110 transition-transform duration-300`}
-                    >
-                      <service.icon className="w-8 h-8 text-white" />
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-4 group-hover:text-blue-600 transition-colors">
-                      {service.title}
-                    </h3>
-                  </>
-                )}
-
+              <div className="flex flex-1 flex-col p-6">
                 <p className="text-gray-600 mb-6 leading-relaxed">
                   {service.description}
                 </p>
@@ -150,18 +224,25 @@ const Services: React.FC = () => {
                     Key Features
                   </h4>
                   <div className="flex flex-wrap gap-2">
-                    {service.features.map((feature, idx) => (
+                    {service.features.map((feature) => (
                       <span
-                        key={idx}
-                        className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-medium hover:bg-blue-100 hover:text-blue-700 transition-colors"
+                        key={feature}
+                        className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-medium transition-colors group-hover:bg-blue-100 group-hover:text-blue-700"
                       >
                         {feature}
                       </span>
                     ))}
                   </div>
                 </div>
+
+                {/* mt-auto keeps this pinned to the card foot, so the six cards
+                    line up however long their copy runs. */}
+                <span className="mt-auto inline-flex items-center pt-6 text-sm font-semibold text-blue-600">
+                  Explore products
+                  <ArrowRight className="ml-1 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+                </span>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>

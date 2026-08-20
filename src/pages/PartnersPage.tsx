@@ -1,14 +1,14 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowRight, Award, Handshake, Shield, Users } from 'lucide-react';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
+import React from "react";
+import { Link } from "react-router-dom";
+import { ArrowRight, Award, Handshake, Shield, Users } from "lucide-react";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 import {
   CATEGORIES,
   SafeImage,
   type Category,
   type CategoryBrand,
-} from './ProductsPage';
+} from "./ProductsPage";
 
 /**
  * The category -> brand map lives on the products page, which is where it is
@@ -23,14 +23,54 @@ import {
  * dark mode, and an inline style is the one thing the theme overrides cannot
  * repaint.
  */
-const LOGO_PLATE = { backgroundColor: '#ffffff', color: '#111827' } as const;
+const LOGO_PLATE = { backgroundColor: "#ffffff", color: "#111827" } as const;
+
+/**
+ * Where a partner logo takes you. The order follows what the data actually
+ * means (see `CategoryBrand` on the products page):
+ *
+ *  1. `partnerId` - the brand has a product catalogue on the products page, so
+ *     go straight to that brand's products. This is the specific products page.
+ *  2. `route` - no catalogue, but a dedicated solution page exists.
+ *  3. neither - nothing to show yet, so open the enquiry form pre-filled with
+ *     the brand name rather than leaving the tile dead.
+ *
+ * No brand in the data carries both `partnerId` and `route`, so the first two
+ * branches never compete.
+ */
+const brandHref = (category: Category, brand: CategoryBrand): string => {
+  if (brand.partnerId) {
+    const search = new URLSearchParams({
+      category: category.id,
+      brand: brand.partnerId,
+    });
+    return `/products?${search.toString()}`;
+  }
+
+  if (brand.route) return brand.route;
+
+  const search = new URLSearchParams({ brand: brand.name, intent: "quote" });
+  return `/contact?${search.toString()}`;
+};
+
+/** Describes the destination for screen readers and the hover tooltip. */
+const brandHint = (brand: CategoryBrand): string => {
+  if (brand.partnerId) return `${brand.name} - view products`;
+  if (brand.route) return `${brand.name} - view solutions`;
+  return `${brand.name} - enquire`;
+};
 
 /** A single brand inside a category card: its logo, or its name if we have no artwork. */
-const BrandTile: React.FC<{ brand: CategoryBrand }> = ({ brand }) => (
-  <div
+const BrandTile: React.FC<{ category: Category; brand: CategoryBrand }> = ({
+  category,
+  brand,
+}) => (
+  <Link
+    to={brandHref(category, brand)}
     style={LOGO_PLATE}
-    className="flex h-16 items-center justify-center rounded-lg border border-gray-200 px-3 py-2 shadow-sm transition-shadow hover:shadow-md"
-    title={brand.name}
+    className="flex h-16 items-center justify-center rounded-lg border border-gray-200 px-3 py-2 shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+    title={brandHint(brand)}
+    aria-label={brandHint(brand)}
   >
     <SafeImage
       src={brand.logo}
@@ -42,7 +82,7 @@ const BrandTile: React.FC<{ brand: CategoryBrand }> = ({ brand }) => (
         </span>
       }
     />
-  </div>
+  </Link>
 );
 
 /** One category: a heading that opens that category on the products page, then its brands. */
@@ -67,15 +107,15 @@ const CategoryCard: React.FC<{ category: Category }> = ({ category }) => (
           <ArrowRight className="h-4 w-4 flex-shrink-0 transition-transform group-hover:translate-x-1" />
         </span>
         <span className="mt-1 block text-sm text-gray-600">
-          {category.brands.length}{' '}
-          {category.brands.length === 1 ? 'brand' : 'brands'}
+          {category.brands.length}{" "}
+          {category.brands.length === 1 ? "brand" : "brands"}
         </span>
       </span>
     </Link>
 
     <div className="grid grid-cols-2 gap-3 p-6 sm:grid-cols-3">
       {category.brands.map((brand) => (
-        <BrandTile key={brand.name} brand={brand} />
+        <BrandTile key={brand.name} category={category} brand={brand} />
       ))}
     </div>
   </article>
@@ -84,27 +124,27 @@ const CategoryCard: React.FC<{ category: Category }> = ({ category }) => (
 const PartnersPage: React.FC = () => {
   const brandCount = CATEGORIES.reduce(
     (total, category) => total + category.brands.length,
-    0
+    0,
   );
 
   const partnershipBenefits = [
     {
       icon: Award,
-      title: 'Certified Excellence',
+      title: "Certified Excellence",
       description:
-        'All our partners maintain the highest industry certifications and standards.',
+        "All our partners maintain the highest industry certifications and standards.",
     },
     {
       icon: Handshake,
-      title: 'Strategic Alliance',
+      title: "Strategic Alliance",
       description:
-        'Long-term partnerships focused on mutual growth and innovation.',
+        "Long-term partnerships focused on mutual growth and innovation.",
     },
     {
       icon: Users,
-      title: 'Expert Local Support',
+      title: "Expert Local Support",
       description:
-        'Access to dedicated technical teams and comprehensive training programs.',
+        "Access to dedicated technical teams and comprehensive training programs.",
     },
   ];
 
@@ -119,8 +159,8 @@ const PartnersPage: React.FC = () => {
               Meet Our Partners
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              {brandCount} technology brands across {CATEGORIES.length}{' '}
-              categories. Pick a category to browse what we supply in it.
+              {brandCount} technology brands across {CATEGORIES.length}{" "}
+              categories. Pick a category, or a brand, to see what we supply.
             </p>
           </div>
 
@@ -143,7 +183,7 @@ const PartnersPage: React.FC = () => {
               Trusted Brands
             </div>
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              Our Technology{' '}
+              Our Technology{" "}
               <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 Brands
               </span>

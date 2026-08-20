@@ -1,3 +1,90 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ---------------------------------------------------------------------------
+   Partner logo marquee (see src/components/PartnerMarquee.tsx)
+   The track holds the logo list twice, so translating it by exactly -50%
+   lands on an identical frame and the loop looks endless.
+--------------------------------------------------------------------------- */
+.marquee {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  /* Soft fade at both edges so logos glide in and out instead of popping. */
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 8%,
+    #000 92%,
+    transparent
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 8%,
+    #000 92%,
+    transparent
+  );
+}
+
+.marquee__track {
+  display: flex;
+  width: max-content;
+  align-items: center;
+  will-change: transform;
+}
+
+/* Content travels left -> right */
+.marquee__track--rtl {
+  animation: marquee-rtl 45s linear infinite;
+}
+
+/* Content travels right -> left */
+.marquee__track--ltr {
+  animation: marquee-ltr 45s linear infinite;
+}
+
+/* Pause while the visitor is hovering or keyboard-focused inside the strip. */
+.marquee:hover .marquee__track,
+.marquee:focus-within .marquee__track {
+  animation-play-state: paused;
+}
+
+@keyframes marquee-rtl {
+  from {
+    transform: translate3d(-50%, 0, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes marquee-ltr {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@media (max-width: 640px) {
+  .marquee__track--rtl,
+  .marquee__track--ltr {
+    animation-duration: 30s;
+  }
+}
+
+/* Respect visitors who have asked for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  .marquee {
+    overflow-x: auto;
+  }
+
+  .marquee__track--rtl,
+  .marquee__track--ltr {
+    animation: none;
+    transform: none;
+  }
+}

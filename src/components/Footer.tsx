@@ -23,11 +23,20 @@ const CONTACT_PHONE_DIAL = '+96892882417';
  * that some DNS resolvers fail to resolve at all, which shows the visitor a
  * browser error page instead of WhatsApp.
  *
- * Stacked directly above the Microsoft support chat bubble, which is fixed at
- * right: 25px / bottom: 10px and is 58px square (so its top edge is 68px from
- * the bottom of the viewport). bottom-24 puts this button at 96px, leaving a
- * 28px gap, and right-6 lines the two up on the same vertical axis. If that
- * widget is ever moved or removed, this is the offset to revisit.
+ * Stacked directly above the Microsoft support chat bubble (img.chatclient-button,
+ * injected by the customerconnect script in index.html). Measured on the live
+ * site, that launcher is fixed at right: 10px / bottom: 10px and renders 58px
+ * square, so its centre sits 39px from the right edge and its top edge 68px
+ * from the bottom.
+ *
+ * This button is the same 58px wide at rest, so it needs the SAME right: 10px
+ * (right-2.5) for the two centres to line up - not right-6. Beware measuring
+ * this with `innerWidth - rect.right`: innerWidth includes the scrollbar, so it
+ * reports 15px more than the CSS offset and makes a misaligned pair look
+ * correct. Compare `getComputedStyle().right` instead.
+ *
+ * bottom-24 puts this button at 96px, leaving a 28px gap above the bubble. If
+ * that widget is ever moved or removed, these are the offsets to revisit.
  */
 const WHATSAPP_DIGITS = '96892882417';
 const WHATSAPP_GREETING =
@@ -43,7 +52,7 @@ const WhatsAppFloatingButton: React.FC = () => (
     rel="noopener noreferrer"
     aria-label="Chat with us on WhatsApp"
     title="Chat with us on WhatsApp"
-    className="group fixed bottom-24 right-6 z-40 flex items-center gap-0 rounded-full bg-[#25D366] text-white shadow-lg hover:shadow-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#25D366] transition-all duration-300 h-14 pl-[0.9375rem] pr-[0.9375rem] hover:pr-6 hover:gap-2"
+    className="group fixed bottom-24 right-2.5 z-40 flex items-center gap-0 rounded-full bg-[#25D366] text-white shadow-lg hover:shadow-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#25D366] transition-all duration-300 h-14 pl-[0.9375rem] pr-[0.9375rem] hover:pr-6 hover:gap-2"
   >
     {/* The WhatsApp mark, since lucide has no brand glyph for it. */}
     <svg

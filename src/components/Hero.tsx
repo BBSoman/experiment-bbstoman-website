@@ -53,21 +53,50 @@ const GLYPHS = [
   { Icon: Waves, className: "top-[8%] right-[32%] h-12 w-12", delay: "-12s" },
 ];
 
+/** Anything that can sit in a badge: lucide icons and the local SVG below. */
+type OrbitIcon = React.FC<{ className?: string }>;
+type OrbitNode = { Icon: OrbitIcon; label: string; a?: number };
+
+/**
+ * LED video wall. lucide has no equivalent — MonitorPlay is already spoken for
+ * by ProAV — so this is drawn locally on lucide's own terms: 24x24 box, 1.75
+ * stroke, currentColor, round joins, so it sits in the badge identically.
+ * A tiled 3x3 panel array on a floor stand.
+ */
+const LedWall: OrbitIcon = ({ className }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={1.75}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    aria-hidden="true"
+  >
+    <rect x="2" y="3" width="20" height="14" rx="1.5" />
+    <path d="M8.7 3v14M15.3 3v14M2 7.7h20M2 12.3h20" />
+    <path d="M12 17v4M8.5 21h7" />
+  </svg>
+);
+
 /**
  * Icons that orbit the globe. No labels by design — each still carries a
  * title/aria-label so the meaning is available to screen readers and on hover.
- * `a` is the starting angle in degrees, `r` the orbit radius as a CSS length.
+ * Angles are spread evenly at render time from the array length, so adding or
+ * removing a capability never needs the spacing recalculated by hand.
  */
-const ORBIT_OUTER = [
-  { Icon: Brain, label: "AI & machine learning", a: 0 },
-  { Icon: Eye, label: "AR / VR & immersive tech", a: 60 },
-  { Icon: MonitorPlay, label: "ProAV & collaboration", a: 120 },
-  { Icon: Cpu, label: "Industrial IoT", a: 180 },
-  { Icon: Radio, label: "Connectivity & networks", a: 240 },
-  { Icon: ShieldCheck, label: "Secure deployment", a: 300 },
+const ORBIT_OUTER: OrbitNode[] = [
+  { Icon: Brain, label: "AI & machine learning" },
+  { Icon: Eye, label: "AR / VR & immersive tech" },
+  { Icon: LedWall, label: "LED displays & video walls" },
+  { Icon: MonitorPlay, label: "ProAV & collaboration" },
+  { Icon: Cpu, label: "Industrial IoT" },
+  { Icon: Radio, label: "Connectivity & networks" },
+  { Icon: ShieldCheck, label: "Secure deployment" },
 ];
 
-const ORBIT_INNER = [
+const ORBIT_INNER: OrbitNode[] = [
   { Icon: Boxes, label: "Smart spaces", a: 30 },
   { Icon: Waves, label: "Sensing & analytics", a: 150 },
   { Icon: Sparkles, label: "Innovation services", a: 270 },
@@ -138,6 +167,24 @@ const HERO_CSS = `
   .bbs-globe-stage { --globe: 140px; --orbit-inner: 112px; --orbit-outer: 150px; }
 }
 
+/* Atmospheric halo, sitting just outside the sphere's edge. */
+.bbs-globe__atmo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: calc(var(--globe) * 1.2);
+  height: calc(var(--globe) * 1.2);
+  margin: calc(var(--globe) * -0.6) 0 0 calc(var(--globe) * -0.6);
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(
+    circle,
+    rgba(56, 189, 248, 0) 64%,
+    rgba(56, 189, 248, 0.22) 79%,
+    rgba(56, 189, 248, 0) 100%
+  );
+}
+
 .bbs-globe {
   position: absolute;
   top: 50%;
@@ -148,39 +195,70 @@ const HERO_CSS = `
   border-radius: 50%;
   overflow: hidden;
   box-shadow:
-    inset 0 0 60px rgba(30, 64, 175, 0.55),
-    inset -18px -12px 50px rgba(0, 0, 0, 0.55),
+    inset 0 0 60px rgba(30, 64, 175, 0.45),
     0 0 70px rgba(59, 130, 246, 0.35);
+  /* Ocean. The land layer is drawn over this. */
   background:
-    radial-gradient(circle at 32% 28%, rgba(147, 197, 253, 0.55), transparent 55%),
-    radial-gradient(circle at 50% 50%, #1e40af 0%, #0f172a 78%);
+    radial-gradient(circle at 34% 26%, rgba(96, 165, 250, 0.3), transparent 56%),
+    radial-gradient(circle at 50% 50%, #1d4ed8 0%, #0c1a3a 72%, #050b1c 100%);
 }
 
-/* Meridian grid: a repeating gradient that scrolls sideways, so the sphere
-   reads as spinning without needing a texture file. */
+/* Real coastlines. The source SVG is an equirectangular world map that tiles
+   seamlessly on the x axis, so scrolling it sideways reads as rotation. The
+   sphere shows half the globe, hence a background twice the sphere's width:
+   one full turn is exactly two widths of travel. */
+.bbs-globe__land {
+  position: absolute;
+  inset: 0;
+  background-image: url("/earth-land.svg");
+  background-repeat: repeat-x;
+  background-size: calc(var(--globe) * 2) 100%;
+  animation: bbs-earth-spin 40s linear infinite;
+}
+@keyframes bbs-earth-spin {
+  from { background-position: 0 0; }
+  to   { background-position: calc(var(--globe) * -2) 0; }
+}
+
+/* Meridians, travelling at exactly the land's speed so they read as fixed to
+   the surface. Spacing is a sixth of the sphere, i.e. 12 to a full turn, which
+   is why the loop is seamless. */
 .bbs-globe__grid {
   position: absolute;
-  inset: -10%;
-  opacity: 0.55;
-  background-image:
-    repeating-linear-gradient(to right, rgba(191, 219, 254, 0.45) 0 1px, transparent 1px 34px),
-    repeating-linear-gradient(to bottom, rgba(191, 219, 254, 0.3) 0 1px, transparent 1px 30px);
-  animation: bbs-globe-spin 14s linear infinite;
-}
-@keyframes bbs-globe-spin {
-  from { background-position: 0 0, 0 0; }
-  to   { background-position: -34px 0, 0 0; }
+  inset: 0;
+  opacity: 0.5;
+  background-image: repeating-linear-gradient(
+    to right,
+    rgba(191, 219, 254, 0.28) 0 1px,
+    transparent 1px calc(var(--globe) / 6)
+  );
+  animation: bbs-earth-spin 40s linear infinite;
 }
 
 /* Latitude arcs, drawn on top to sell the curvature. */
 .bbs-globe__arcs { position: absolute; inset: 0; }
+
+/* Limb darkening plus a day/night terminator: the single most important cue
+   that turns a flat map into a ball. */
+.bbs-globe__shade {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(
+      125% 125% at 20% 16%,
+      transparent 34%,
+      rgba(2, 6, 23, 0.5) 74%,
+      rgba(2, 6, 23, 0.88) 100%
+    );
+}
 
 /* Specular highlight. */
 .bbs-globe__gloss {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background: radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.35), transparent 42%);
+  background: radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.2), transparent 44%);
 }
 
 .bbs-ring {
@@ -228,8 +306,13 @@ const HERO_CSS = `
   .bbs-hero-float,
   .bbs-hero-drift,
   .bbs-globe__grid,
+  .bbs-globe__land,
   .bbs-orbit,
   .bbs-orbit__keep-upright { animation: none; }
+  /* Media queries add no specificity, so the two-class rule above would
+     otherwise keep the inner badges spinning — and therefore frozen at a
+     random tilt — for readers who asked for no motion. */
+  .bbs-orbit--inner .bbs-orbit__keep-upright { animation: none; }
 }
 `;
 
@@ -335,8 +418,10 @@ const Hero: React.FC = () => {
               <div className="bbs-ring bbs-ring--inner" />
 
               {/* The globe */}
-              <div className="bbs-globe">
+              <div className="bbs-globe__atmo" aria-hidden="true" />
+              <div className="bbs-globe" role="img" aria-label="Rotating globe">
                 <div className="bbs-globe__grid" />
+                <div className="bbs-globe__land" />
                 <svg
                   className="bbs-globe__arcs"
                   viewBox="0 0 100 100"
@@ -345,7 +430,7 @@ const Hero: React.FC = () => {
                 >
                   <g
                     fill="none"
-                    stroke="rgba(191,219,254,0.35)"
+                    stroke="rgba(191,219,254,0.22)"
                     strokeWidth="0.6"
                   >
                     <ellipse cx="50" cy="50" rx="49" ry="49" />
@@ -355,18 +440,19 @@ const Hero: React.FC = () => {
                     <ellipse cx="50" cy="50" rx="33" ry="49" />
                   </g>
                 </svg>
+                <div className="bbs-globe__shade" />
                 <div className="bbs-globe__gloss" />
               </div>
 
               {/* Outer orbit */}
               <div className="bbs-orbit bbs-orbit--outer">
-                {ORBIT_OUTER.map(({ Icon, label, a }) => (
+                {ORBIT_OUTER.map(({ Icon, label, a }, i, arr) => (
                   <div
                     key={label}
                     className="bbs-orbit__node"
                     style={
                       {
-                        "--a": `${a}deg`,
+                        "--a": `${a ?? (360 / arr.length) * i}deg`,
                         "--r": "var(--orbit-outer)",
                       } as React.CSSProperties
                     }
@@ -387,13 +473,13 @@ const Hero: React.FC = () => {
 
               {/* Inner orbit, turning the other way */}
               <div className="bbs-orbit bbs-orbit--inner">
-                {ORBIT_INNER.map(({ Icon, label, a }) => (
+                {ORBIT_INNER.map(({ Icon, label, a }, i, arr) => (
                   <div
                     key={label}
                     className="bbs-orbit__node"
                     style={
                       {
-                        "--a": `${a}deg`,
+                        "--a": `${a ?? (360 / arr.length) * i}deg`,
                         "--r": "var(--orbit-inner)",
                       } as React.CSSProperties
                     }

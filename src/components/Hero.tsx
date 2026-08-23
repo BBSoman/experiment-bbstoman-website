@@ -149,7 +149,7 @@ const HERO_CSS = `
 .bbs-globe-stage {
   /* Both orbits must clear the sphere: orbit radius - half a badge > globe/2.
      Outer badges are 56px, inner badges 44px. */
-  --globe: 230px;
+  --globe: 250px;
   --orbit-inner: 170px;
   --orbit-outer: 230px;
   position: relative;
@@ -158,13 +158,13 @@ const HERO_CSS = `
   max-width: 100%;
 }
 @media (max-width: 1279px) {
-  .bbs-globe-stage { --globe: 200px; --orbit-inner: 150px; --orbit-outer: 202px; }
+  .bbs-globe-stage { --globe: 220px; --orbit-inner: 150px; --orbit-outer: 202px; }
 }
 @media (max-width: 1023px) {
-  .bbs-globe-stage { --globe: 210px; --orbit-inner: 156px; --orbit-outer: 210px; }
+  .bbs-globe-stage { --globe: 226px; --orbit-inner: 156px; --orbit-outer: 210px; }
 }
 @media (max-width: 420px) {
-  .bbs-globe-stage { --globe: 140px; --orbit-inner: 112px; --orbit-outer: 150px; }
+  .bbs-globe-stage { --globe: 150px; --orbit-inner: 112px; --orbit-outer: 150px; }
 }
 
 /* Atmospheric halo, sitting just outside the sphere's edge. */
@@ -199,8 +199,8 @@ const HERO_CSS = `
     0 0 70px rgba(59, 130, 246, 0.35);
   /* Ocean. The land layer is drawn over this. */
   background:
-    radial-gradient(circle at 34% 26%, rgba(96, 165, 250, 0.3), transparent 56%),
-    radial-gradient(circle at 50% 50%, #1d4ed8 0%, #0c1a3a 72%, #050b1c 100%);
+    radial-gradient(circle at 34% 26%, rgba(125, 211, 252, 0.28), transparent 52%),
+    radial-gradient(circle at 50% 45%, #1e6fc4 0%, #10467f 46%, #072a52 76%, #041a34 100%);
 }
 
 /* Real coastlines. The source SVG is an equirectangular world map that tiles
@@ -226,7 +226,7 @@ const HERO_CSS = `
 .bbs-globe__grid {
   position: absolute;
   inset: 0;
-  opacity: 0.5;
+  opacity: 0.2;
   background-image: repeating-linear-gradient(
     to right,
     rgba(191, 219, 254, 0.28) 0 1px,
@@ -246,10 +246,11 @@ const HERO_CSS = `
   border-radius: 50%;
   background:
     radial-gradient(
-      125% 125% at 20% 16%,
-      transparent 34%,
-      rgba(2, 6, 23, 0.5) 74%,
-      rgba(2, 6, 23, 0.88) 100%
+      125% 125% at 22% 18%,
+      transparent 30%,
+      rgba(2, 6, 23, 0.34) 62%,
+      rgba(2, 6, 23, 0.7) 84%,
+      rgba(2, 6, 23, 0.95) 100%
     );
 }
 
@@ -430,7 +431,7 @@ const Hero: React.FC = () => {
                 >
                   <g
                     fill="none"
-                    stroke="rgba(191,219,254,0.22)"
+                    stroke="rgba(226,240,255,0.16)"
                     strokeWidth="0.6"
                   >
                     <ellipse cx="50" cy="50" rx="49" ry="49" />

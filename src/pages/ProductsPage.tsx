@@ -85,6 +85,13 @@ interface Partner {
 export interface CategoryBrand {
   name: string;
   logo?: string;
+  /**
+   * The artwork is a reverse-out (white) logo, so it disappears on the white
+   * logo plates used everywhere else. Tiles that show it paint a dark plate
+   * instead. Set only where the supplied file really is light — checked by
+   * looking at the artwork, not guessed from the brand.
+   */
+  lightArtwork?: boolean;
   /** Matches a `partners[].id` below — brand has a product catalogue on this page. */
   partnerId?: string;
   /** Route to an existing solution page, used when there is no product catalogue. */
@@ -147,7 +154,7 @@ export const CATEGORIES: Category[] = [
     brands: [
       { name: 'AI-LA', logo: 'ai-la.png', partnerId: 'ai-la' },
       { name: 'BOE', logo: 'boe1.png', partnerId: 'boe' },
-      { name: 'Lumitrix' },
+      { name: 'Lumitrix', logo: 'lumitrix.png' },
     ],
   },
   {
@@ -179,13 +186,14 @@ export const CATEGORIES: Category[] = [
     brands: [
       { name: 'Mago', logo: 'mago1.png', route: '/mago-solutions' },
       {
-        // No logo file in /public yet — SafeImage falls back to the name.
         name: 'Nuera Communications',
+        logo: 'nuera.png',
+        lightArtwork: true,
         partnerId: 'Nuera Commuincations',
       },
-      { name: 'Pexip' },
-      { name: 'Neat' },
-      { name: 'Insta360 (Video)' },
+      { name: 'Pexip', logo: 'pexip.png' },
+      { name: 'Neat', logo: 'neat.png' },
+      { name: 'Insta360 (Video)', logo: 'insta360.png' },
       { name: 'Nearity', logo: 'nearity1.png', route: '/nearity-solutions' },
       {
         name: 'Nearstream',
@@ -204,7 +212,7 @@ export const CATEGORIES: Category[] = [
     image: 'vr.jpg.jpg',
     brands: [
       { name: 'HTC VIVE', logo: 'vive1.png', partnerId: 'htc-vive' },
-      { name: 'RealWear' },
+      { name: 'RealWear', logo: 'realwear.png' },
     ],
   },
   {
@@ -218,7 +226,7 @@ export const CATEGORIES: Category[] = [
     brands: [
       { name: 'Viverse', logo: 'viverse1.png', route: '/Viverse-solutions' },
       { name: 'Vizzio', logo: 'vizzio1.png', partnerId: 'vizzio' },
-      { name: 'Igloo Vision' },
+      { name: 'Igloo Vision', logo: 'igloo.png', lightArtwork: true },
     ],
   },
   {
@@ -234,7 +242,7 @@ export const CATEGORIES: Category[] = [
       { name: 'Camsense', logo: 'camsense.png' },
       { name: 'Telepresenz', logo: 'tele.png.png', partnerId: 'tele-presenz' },
       { name: 'Robro', logo: 'roboro.png', route: '/robro-systems-solutions' },
-      { name: 'Insta360 (Cameras)' },
+      { name: 'Insta360 (Cameras)', logo: 'insta360.png' },
     ],
   },
   {
@@ -270,7 +278,7 @@ export const CATEGORIES: Category[] = [
         logo: 'nano.png',
         route: '/nano-precise-solutions',
       },
-      { name: 'Milesight' },
+      { name: 'Milesight', logo: 'milesight.png' },
     ],
   },
   {
@@ -301,7 +309,7 @@ export const CATEGORIES: Category[] = [
     brands: [
       { name: 'Weblib', logo: 'weblib1.png', route: '/weblib-solutions' },
       { name: 'G-Reigns', logo: 'g reigns1.png', partnerId: 'g-reigns' },
-      { name: 'Netgear' },
+      { name: 'Netgear', logo: 'neatgear.png' },
     ],
   },
   {
@@ -312,7 +320,7 @@ export const CATEGORIES: Category[] = [
     icon: Server,
     color: 'from-slate-500 to-slate-700',
     image: 'carriercore.png',
-    brands: [{ name: 'Supermicro' }],
+    brands: [{ name: 'Supermicro', logo: 'supermicro.png' }],
   },
 ];
 
@@ -330,6 +338,7 @@ const ASSET_FALLBACKS: Record<string, string> = {
   'oledkiosk2.png': 'oledkiosk.png',
   'vizzio1.png': 'vizzio copy.png',
   'mago1.png': 'mago2.png',
+  'nuera copy.png': 'nuera.png',
 };
 
 const assetUrl = (file: string) =>
@@ -6563,7 +6572,11 @@ const ProductsPage: React.FC = () => {
                                   <SafeImage
                                     src={brand.logo}
                                     alt=""
-                                    className="w-11 h-6 object-contain object-left flex-shrink-0"
+                                    className={`w-11 h-6 object-contain flex-shrink-0 ${
+                                      brand.lightArtwork
+                                        ? 'rounded bg-slate-900 px-1 object-center'
+                                        : 'object-left'
+                                    }`}
                                     fallback={
                                       <span className="w-11 h-6 flex-shrink-0 flex items-center justify-center rounded bg-slate-100 text-[11px] font-semibold text-slate-500">
                                         {brand.name.trim().charAt(0)}
@@ -6973,7 +6986,9 @@ const ProductsPage: React.FC = () => {
                           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                           <div className="absolute inset-x-0 top-0 bottom-16 flex items-center justify-center p-8">
                             <div
-                              className={`bg-white rounded-xl px-6 py-5 shadow-lg max-w-[80%] transition-transform duration-500 ${
+                              className={`${
+                                brand.lightArtwork ? 'bg-slate-900' : 'bg-white'
+                              } rounded-xl px-6 py-5 shadow-lg max-w-[80%] transition-transform duration-500 ${
                                 isInteractive ? 'group-hover:scale-105' : ''
                               }`}
                             >

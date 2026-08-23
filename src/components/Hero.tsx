@@ -179,8 +179,9 @@ const HERO_CSS = `
   pointer-events: none;
   background: radial-gradient(
     circle,
-    rgba(56, 189, 248, 0) 64%,
-    rgba(56, 189, 248, 0.22) 79%,
+    rgba(56, 189, 248, 0) 62%,
+    rgba(56, 189, 248, 0.34) 78%,
+    rgba(59, 130, 246, 0.12) 88%,
     rgba(56, 189, 248, 0) 100%
   );
 }
@@ -195,12 +196,14 @@ const HERO_CSS = `
   border-radius: 50%;
   overflow: hidden;
   box-shadow:
-    inset 0 0 60px rgba(30, 64, 175, 0.45),
-    0 0 70px rgba(59, 130, 246, 0.35);
-  /* Ocean. The land layer is drawn over this. */
+    inset 0 0 0 1px rgba(125, 211, 252, 0.28),
+    inset 0 0 45px rgba(8, 47, 90, 0.7),
+    0 0 80px rgba(56, 189, 248, 0.3);
+  /* Deep ocean. Dark enough that the glowing coastlines and the node network
+     are what the eye lands on. */
   background:
-    radial-gradient(circle at 34% 26%, rgba(125, 211, 252, 0.28), transparent 52%),
-    radial-gradient(circle at 50% 45%, #1e6fc4 0%, #10467f 46%, #072a52 76%, #041a34 100%);
+    radial-gradient(circle at 62% 30%, rgba(56, 189, 248, 0.22), transparent 46%),
+    radial-gradient(circle at 46% 46%, #123a6b 0%, #0a2450 44%, #06152f 74%, #030b1c 100%);
 }
 
 /* Real coastlines. The source SVG is an equirectangular world map that tiles
@@ -215,6 +218,17 @@ const HERO_CSS = `
   background-size: calc(var(--globe) * 2) 100%;
   animation: bbs-earth-spin 40s linear infinite;
 }
+
+/* Bloom. The same map, blurred and screened underneath the sharp copy, so the
+   coastlines and nodes glow instead of just being bright lines. Doing it here
+   rather than with an SVG filter keeps it GPU-composited and one cached file.
+   Same animation name and duration as the sharp layer, so the two stay locked
+   together. */
+.bbs-globe__land--glow {
+  filter: blur(3.5px) saturate(1.6);
+  opacity: 0.95;
+  mix-blend-mode: screen;
+}
 @keyframes bbs-earth-spin {
   from { background-position: 0 0; }
   to   { background-position: calc(var(--globe) * -2) 0; }
@@ -226,10 +240,10 @@ const HERO_CSS = `
 .bbs-globe__grid {
   position: absolute;
   inset: 0;
-  opacity: 0.2;
+  opacity: 0.3;
   background-image: repeating-linear-gradient(
     to right,
-    rgba(191, 219, 254, 0.28) 0 1px,
+    rgba(125, 211, 252, 0.3) 0 1px,
     transparent 1px calc(var(--globe) / 6)
   );
   animation: bbs-earth-spin 40s linear infinite;
@@ -246,20 +260,21 @@ const HERO_CSS = `
   border-radius: 50%;
   background:
     radial-gradient(
-      125% 125% at 22% 18%,
-      transparent 30%,
-      rgba(2, 6, 23, 0.34) 62%,
-      rgba(2, 6, 23, 0.7) 84%,
-      rgba(2, 6, 23, 0.95) 100%
+      130% 130% at 66% 26%,
+      transparent 26%,
+      rgba(1, 6, 20, 0.34) 60%,
+      rgba(1, 6, 20, 0.72) 84%,
+      rgba(1, 6, 20, 0.94) 100%
     );
 }
 
-/* Specular highlight. */
+/* Specular bloom, up and to the right of centre so the shading above reads as
+   one light source. */
 .bbs-globe__gloss {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background: radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.2), transparent 44%);
+  background: radial-gradient(circle at 63% 27%, rgba(186, 230, 253, 0.3), transparent 34%);
 }
 
 .bbs-ring {
@@ -422,6 +437,7 @@ const Hero: React.FC = () => {
               <div className="bbs-globe__atmo" aria-hidden="true" />
               <div className="bbs-globe" role="img" aria-label="Rotating globe">
                 <div className="bbs-globe__grid" />
+                <div className="bbs-globe__land bbs-globe__land--glow" />
                 <div className="bbs-globe__land" />
                 <svg
                   className="bbs-globe__arcs"
@@ -431,7 +447,7 @@ const Hero: React.FC = () => {
                 >
                   <g
                     fill="none"
-                    stroke="rgba(226,240,255,0.16)"
+                    stroke="rgba(125,211,252,0.2)"
                     strokeWidth="0.6"
                   >
                     <ellipse cx="50" cy="50" rx="49" ry="49" />

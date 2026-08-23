@@ -26,6 +26,16 @@ import {
 const LOGO_PLATE = { backgroundColor: "#ffffff", color: "#111827" } as const;
 
 /**
+ * A few partners supplied only their reverse-out (white) logo, which is
+ * invisible on the plate above. Those tiles get a dark plate instead, flagged
+ * per brand by `lightArtwork` in the products-page data.
+ */
+const DARK_LOGO_PLATE = {
+  backgroundColor: "#0f172a",
+  color: "#f8fafc",
+} as const;
+
+/**
  * Where a partner logo takes you. The order follows what the data actually
  * means (see `CategoryBrand` on the products page):
  *
@@ -67,8 +77,10 @@ const BrandTile: React.FC<{ category: Category; brand: CategoryBrand }> = ({
 }) => (
   <Link
     to={brandHref(category, brand)}
-    style={LOGO_PLATE}
-    className="flex h-16 items-center justify-center rounded-lg border border-gray-200 px-3 py-2 shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+    style={brand.lightArtwork ? DARK_LOGO_PLATE : LOGO_PLATE}
+    className={`flex h-16 items-center justify-center rounded-lg border px-3 py-2 shadow-sm ${
+      brand.lightArtwork ? "border-slate-700" : "border-gray-200"
+    } transition-all hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600`}
     title={brandHint(brand)}
     aria-label={brandHint(brand)}
   >

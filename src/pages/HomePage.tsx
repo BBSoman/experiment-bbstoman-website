@@ -17,14 +17,33 @@ import Footer from "../components/Footer";
 type Brand = {
   name: string;
   logo: string;
-  /** Internal route for the brand's solution page. */
+  /**
+   * Where the tile goes. A dedicated solution page where one exists, otherwise
+   * the enquiry form pre-filled with the brand - the same order of preference
+   * the partners page uses, so a logo is never a dead link.
+   */
   route: string;
+  /**
+   * The artwork is a reverse-out (white) logo, so it vanishes on the white
+   * plates these tiles use in both themes. Flagged tiles get a dark plate.
+   */
+  lightArtwork?: boolean;
 };
 
-/** Logo file names are all present in /public; routes are all in App.tsx. */
+/**
+ * Logo file names are all present in /public. Kept in the same order as the
+ * categories on the products page, so the strip reads as a tour of the
+ * catalogue rather than a random pile.
+ *
+ * This list is maintained by hand and the products/partners pages read their
+ * own `CATEGORIES`, so the two can drift. If a brand is added there, add it
+ * here too.
+ */
 const BRANDS: Brand[] = [
   { name: "HTC VIVE", logo: "/vive1.png", route: "/htc-solutions" },
+  { name: "RealWear", logo: "/realwear.png", route: "/contact?brand=RealWear&intent=quote" },
   { name: "BOE", logo: "/boe1.png", route: "/boe-solutions" },
+  { name: "Lumitrix", logo: "/lumitrix.png", route: "/contact?brand=Lumitrix&intent=quote" },
   { name: "V View", logo: "/vview.png", route: "/vview-solutions" },
   {
     name: "Ashton Bentley",
@@ -39,8 +58,17 @@ const BRANDS: Brand[] = [
     logo: "/nearstream1.png",
     route: "/nearstream-solutions",
   },
+  { name: "Pexip", logo: "/pexip.png", route: "/contact?brand=Pexip&intent=quote" },
+  { name: "Neat", logo: "/neat.png", route: "/contact?brand=Neat&intent=quote" },
+  { name: "Insta360", logo: "/insta360.png", route: "/contact?brand=Insta360&intent=quote" },
   { name: "Viverse", logo: "/viverse1.png", route: "/Viverse-solutions" },
   { name: "Vizzio", logo: "/vizzio copy.png", route: "/vizzio-solutions" },
+  {
+    name: "Igloo Vision",
+    logo: "/igloo.png",
+    route: "/contact?brand=Igloo Vision&intent=quote",
+    lightArtwork: true,
+  },
   {
     name: "Polytron",
     logo: "/polytron copy.png",
@@ -51,6 +79,7 @@ const BRANDS: Brand[] = [
     logo: "/tele.png.png",
     route: "/tele-presenz-solutions",
   },
+  { name: "Camsense", logo: "/camsense.png", route: "/contact?brand=Camsense&intent=quote" },
   {
     name: "Robro Systems",
     logo: "/roboro.png",
@@ -66,15 +95,19 @@ const BRANDS: Brand[] = [
     route: "/disruptive-technologies-solutions",
   },
   { name: "Nanoprecise", logo: "/nano.png", route: "/nano-precise-solutions" },
+  { name: "Milesight", logo: "/milesight.png", route: "/contact?brand=Milesight&intent=quote" },
   {
     name: "Property Automate",
     logo: "/automate1.png",
     route: "/property-automate-solutions",
   },
+  { name: "Cactus", logo: "/cactus1.png", route: "/contact?brand=Cactus&intent=quote" },
   { name: "Weblib", logo: "/weblib1.png", route: "/weblib-solutions" },
   { name: "G-Reigns", logo: "/g reigns1.png", route: "/reigns-solutions" },
+  { name: "Netgear", logo: "/neatgear.png", route: "/contact?brand=Netgear&intent=quote" },
   { name: "GoNitro", logo: "/nitro1.png", route: "/go-nitro-solutions" },
   { name: "Nuera", logo: "/Untitled-3 copy.png", route: "/Nuera-solutions" },
+  { name: "Supermicro", logo: "/supermicro.png", route: "/contact?brand=Supermicro&intent=quote" },
 ];
 
 /**
@@ -119,6 +152,20 @@ const MARQUEE_CSS = `
   border-color: rgba(255, 255, 255, 0.16);
 }
 .dark .bbs-marquee-plate:hover {
+  border-color: rgba(147, 197, 253, 0.65);
+}
+
+/* A couple of partners supplied only their reverse-out (white) logo, which is
+   invisible on the white plate above. Those tiles go dark instead. Both
+   selectors are needed: the '.dark .bbs-marquee-plate' rule above carries two
+   classes, so a single-class override would lose to it in dark mode. */
+.bbs-marquee-plate--dark,
+.dark .bbs-marquee-plate--dark {
+  background-color: #0f172a;
+  border-color: rgba(148, 163, 184, 0.35);
+}
+.bbs-marquee-plate--dark:hover,
+.dark .bbs-marquee-plate--dark:hover {
   border-color: rgba(147, 197, 253, 0.65);
 }
 
@@ -169,7 +216,11 @@ const LogoCard: React.FC<{ brand: Brand; duplicate?: boolean }> = ({
     aria-hidden={duplicate}
     tabIndex={duplicate ? -1 : undefined}
     title={brand.name}
-    className="bbs-marquee-plate group mx-3 flex h-24 w-44 shrink-0 items-center justify-center rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl sm:mx-4 sm:h-28 sm:w-52"
+    className={`bbs-marquee-plate group mx-3 flex h-24 w-44 shrink-0 items-center justify-center rounded-2xl border p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl sm:mx-4 sm:h-28 sm:w-52 ${
+      brand.lightArtwork
+        ? "bbs-marquee-plate--dark"
+        : "border-gray-100 bg-white"
+    }`}
   >
     <img
       src={brand.logo}

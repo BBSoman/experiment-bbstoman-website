@@ -425,7 +425,12 @@ const Hero: React.FC = () => {
                 to="/partners"
                 className="flex items-center justify-center rounded-lg border-2 border-white px-8 py-4 font-semibold text-white transition-all hover:bg-white hover:text-blue-700"
               >
-                Brands
+                {/* "Partners", not "Brands": the header nav, the footer links and
+                    the destination page's own heading all say Partners, so the
+                    label a visitor clicks should match where they land. The
+                    solution pages still say "Back to Brands" - if that ever gets
+                    standardised, this is part of the same set. */}
+                Partners
               </Link>
             </div>
           </div>

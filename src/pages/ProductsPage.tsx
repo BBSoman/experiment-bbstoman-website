@@ -341,8 +341,21 @@ const ASSET_FALLBACKS: Record<string, string> = {
   'nuera copy.png': 'nuera.png',
 };
 
-const assetUrl = (file: string) =>
-  `/${encodeURIComponent(ASSET_FALLBACKS[file] || file)}`;
+const assetUrl = (file: string) => {
+  const mapped = ASSET_FALLBACKS[file] || file;
+
+  /*
+   * Some entries in the catalogue below reference images through a bundler
+   * `import` (e.g. `import qm22a from '/qm22a.png'`). Those values are already
+   * fully-resolved, URL-encoded paths, so encoding them again turns
+   * '/qm22a.png' into '/%2Fqm22a.png' — which the SPA rewrite answers with
+   * index.html, and the image silently disappears. Only bare filenames need
+   * encoding.
+   */
+  if (/^(?:[a-z]+:)?\/\//i.test(mapped) || mapped.startsWith('/')) return mapped;
+
+  return `/${encodeURIComponent(mapped)}`;
+};
 
 export const SafeImage: React.FC<{
   src?: string;
